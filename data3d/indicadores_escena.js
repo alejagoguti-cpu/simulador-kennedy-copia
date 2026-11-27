@@ -109,14 +109,19 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
     if (macro === 'circ') return (T(I).estaciones || I.estaciones || []).filter(ok).map((p) => ({ x: p.x, z: p.z, v: p.cap_t_dia ? Math.round(p.tratado_t_dia / p.cap_t_dia * 100) : null, mal: p.cap_t_dia && p.tratado_t_dia > p.cap_t_dia }));
     if (k === 'ruido' || k === 'bienestar') return (I.avesRuido?.porParche || []).filter(ok).map((p) => ({ x: p.x, z: p.z, v: k === 'ruido' ? Math.round(p.db) : p.aves, mal: p.db > 60 }));
     if (macro === 'eco') return (I.evaluacion?.diversidad?.porParche || []).filter(ok).map((p) => ({ x: p.x, z: p.z, v: p.riqueza, mal: false }));
-    return (T(I).sectores || []).filter(ok).filter((_, i) => i % 6 === 0).map((p) => ({ x: p.x, z: p.z, v: Math.round(p.valor || 0), mal: p.valor < 80 }));
+    const sectores=(T(I).sectores || []).filter(ok).filter((_, i) => i % 6 === 0).map((p) => ({ x: p.x, z: p.z, v: Math.round(p.valor || 0), mal: p.valor < 80 }));
+    if(sectores.length)return sectores;
+    const par=R.def?.par,ref=par===2?(vias()?.americas||[]).flat().map(([x,z])=>({x,z})):par===3?(I.basura?.puntos||[]):par===4?(I.verde?.parches||[]):par===5?(I.suelo?.zonas||[]):(I.gobernanza?.barrios||[]);
+    const pts=ref.filter(ok);if(!pts.length)return [];
+    const x=pts.reduce((v,p)=>v+p.x,0)/pts.length,z=pts.reduce((v,p)=>v+p.z,0)/pts.length;
+    return [{x,z,v:null,mal:false,global:true}];
   }
   function dibujarIndicador(t) {
     if (!clave || !INDK[clave]) return;
     for (const [i, p] of puntosIndicador(clave).entries()) { const q = P(p.x, p.z, 6); if (!q.v) continue; const col = p.mal ? '#d99370' : '#c9f27a';
       g.strokeStyle = col; g.lineWidth = 1; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x, q.y - 22); g.stroke(); g.setLineDash([]);
       circ(q.x, q.y, 8, col, '#0a1514', 2.5); if (!reducido) { const u = (t * 0.4 + i * 0.11) % 1; circ(q.x, q.y, 4 + 10 * u, null, col + Math.round((1 - u) * 200).toString(16).padStart(2, '0'), 1); }
-      if (p.v != null && Number.isFinite(p.v)) texto(String(p.v), q.x + 5, q.y - 24, col); }
+      if (p.global) texto('ÍNDICE DEL ESCENARIO: '+INDK[clave].n.toUpperCase(),q.x+15,q.y-24,col); else if (p.v != null && Number.isFinite(p.v)) texto(String(p.v), q.x + 12, q.y - 24, col); }
   }
   function marcarBotones() { document.querySelectorAll('.pi-mapa').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mapa === clave))); }
   function frame(ms) {

@@ -10,7 +10,7 @@
    [SUP] METRO_MENOS_CARROS = 0,10: no hay cifra oficial de cuánto tráfico quita la Línea 1. */
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
-import { iniciarSimUI } from './sim_ui.js?v=149';
+import { iniciarSimUI } from './sim_ui.js?v=150';
 import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=13';
 
 export const METRO_SEM_OP = 114;
@@ -468,7 +468,7 @@ export function iniciarLimpio({ T3 }) {
     $b('.tit').textContent = `Simulación ${id} · ${S.n}`;
     // escenario del modelo en el mapa (los botones del panel A·B·C·D, escondido)
     const btn = document.querySelector(`#esim .seg button[data-e="${S.base}"]`); if (btn) btn.click();
-    if (window.KEN_PLANBAV) window.KEN_PLANBAV.ver(S.base === 'D');
+    if (window.KEN_PLANBAV) window.KEN_PLANBAV.ver(S.base === 'D' && S.par === 1);
     // queda en el año 1, en pausa: corre al darle play
     setTimeout(() => { if (seguir) { if (UI) UI.preparar(id, { desde: Math.min(FIN_SEM, RELOJ.sem) }); } else { reiniciar(); if (UI) UI.preparar(id); } if (mostrarRecorrido) setTimeout(() => abrirRecorrido(id), 120); }, 60);
     // rutas y vehículos de reparto de «Viajes de abastecimiento» (panel escondido): apagados, tiñen el mapa de naranja y pesan
