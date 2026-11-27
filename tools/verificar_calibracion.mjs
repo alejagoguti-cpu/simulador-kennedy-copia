@@ -42,3 +42,21 @@ for (const id of [7, 8]) {
 assert.ok(S.SIMS.find(s => s.id === 11).sliders.some(s => s.k === 'barrioPrioritario'));
 assert.ok(S.SIMS.find(s => s.id === 12).sliders.some(s => s.k === 'barrioPrioritario'));
 
+// Cada prueba extrema debe detenerse por una regla persistente antes del año 15.
+const casosCriticos = [
+  [3, { cierreT0: 1, cierreDur: 520, desvioMayo: 100, trafCrece: 3, mitiga: 0 }],
+  [5, { orgAumento: 100, orgT0: 1, recoleccion: 50, 'P2.cap': 1000, 'P2.frac': 0 }],
+  [7, { parchePerdida: 100, parcheT0: 1, 'P3.arboles': 0, 'P3.rec': 0 }],
+  [9, { pobCrece: 3, presionSuelo: 10, proteccion: 0, trafCrece: 3 }],
+  [11, { presupuesto: 10, decisionCada: 52, pobCrece: 3, 'P1.cupos': 0 }]
+];
+for (const [id, valores] of casosCriticos) {
+  const E = S.crear(id, 1, valores);
+  for (let sem = 0; sem < 15 * 52 && !S.gameOver(E); sem++) S.paso(E);
+  const go = S.gameOver(E);
+  assert.ok(go, `simulación ${id}: falta Game Over antes de 15 años`);
+  assert.equal(go.inicio, go.sem - 3, `simulación ${id}: deben ser cuatro semanas consecutivas`);
+  assert.ok(go.sem <= 15 * 52);
+  console.log(`Simulación ${id}: Game Over ${go.regla} en semana ${go.sem}`);
+}
+

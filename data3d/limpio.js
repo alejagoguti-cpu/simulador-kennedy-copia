@@ -11,7 +11,7 @@
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
 import { iniciarSimUI } from './sim_ui.js?v=142';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=4';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=5';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -403,7 +403,37 @@ export function iniciarLimpio({ T3 }) {
   const ESC = window.KEN_LIMPIO = { activo: 0, sim: null, factorCarros: () => factorCarros(), SIMS };
   let UI = null, preparado = true;
   const valoresPar = new Map();
-  const recorrido = crearRecorridoArquitectura({ T3, alComenzar: (def, valores) => {
+  let pendientesVariables = null;
+  function pintarPendientesVariables() {
+    if (!pendientesVariables || ESC.activo !== pendientesVariables.id) return;
+    const caja = document.querySelector('#lp-vars .lp-db') || document.querySelector('#su-der');
+    if (!caja) return;
+    let aviso = caja.querySelector('#lp-pendientes');
+    if (!aviso) { aviso = document.createElement('p'); aviso.id = 'lp-pendientes'; aviso.setAttribute('aria-live', 'polite'); aviso.style.cssText = 'padding:9px 11px;border:1px solid var(--ui-bd2);border-radius:9px;background:var(--ui-acc-bg);color:var(--ui-acc-tx);font:500 11px/1.4 var(--ui-mono)'; caja.appendChild(aviso); }
+    const faltan = pendientesVariables.claves.size - pendientesVariables.tocadas.size;
+    aviso.textContent = faltan ? `Configura ${faltan} variable${faltan === 1 ? '' : 's'} para habilitar Play.` : 'Variables completas · Play habilitado.';
+  }
+  document.addEventListener('change', e => {
+    const k = e.target?.dataset?.k, p = pendientesVariables;
+    if (!p || ESC.activo !== p.id || !p.claves.has(k) || !e.target.closest('#su-der')) return;
+    p.tocadas.add(k);
+    if (p.tocadas.size === p.claves.size) {
+      preparado = true; $b('.play').disabled = false;
+      if (UI?.R?.valores) valoresPar.set(p.par, { ...UI.R.valores });
+    }
+    pintarPendientesVariables();
+  });
+  const recorrido = crearRecorridoArquitectura({ T3, alMostrarVariables: def => {
+    if (!UI || ESC.activo !== def.id) return;
+    const guardados = valoresPar.get(def.par);
+    if (guardados) UI.aplicarVariables(guardados);
+    pendientesVariables = { id: def.id, par: def.par, claves: new Set(def.sliders.map(s => s.k)), tocadas: new Set(guardados ? def.sliders.map(s => s.k) : []) };
+    preparado = pendientesVariables.tocadas.size === pendientesVariables.claves.size;
+    $b('.play').disabled = !preparado;
+    if (matchMedia('(max-width: 760px)').matches && !html.classList.contains('lp-izq-abierto')) document.querySelector('#lp-izq-tog')?.click();
+    setTimeout(pintarPendientesVariables, 0);
+    setTimeout(pintarPendientesVariables, 150);
+  }, alComenzar: (def, valores) => {
     if (!UI || ESC.activo !== def.id) return;
     valoresPar.set(def.par, { ...(valoresPar.get(def.par) || {}), ...valores });
     UI.aplicarVariables(valores); preparado = true; $b('.play').disabled = false; alternar();
@@ -420,7 +450,7 @@ export function iniciarLimpio({ T3 }) {
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
-    recorrido.cerrar(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
+    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
