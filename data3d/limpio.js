@@ -11,7 +11,7 @@
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
 import { iniciarSimUI } from './sim_ui.js?v=142';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=1';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=2';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -419,6 +419,7 @@ export function iniciarLimpio({ T3 }) {
   }
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
+    document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
     recorrido.cerrar(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
