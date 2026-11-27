@@ -184,23 +184,15 @@
 document.addEventListener('DOMContentLoaded',()=>{
  const intro=document.getElementById('urbia-intro'),start=document.getElementById('urbia-start'),loader=document.getElementById('loader'),status=document.getElementById('estado-maqueta');
  intro.querySelectorAll('[data-zoom]').forEach(btn=>btn.onclick=()=>intro.querySelector('iframe').contentWindow.postMessage('zoom-'+btn.dataset.zoom,'*'));
- /* «Iniciar» se activa solo con TODO cargado: maqueta, capas, árboles, tráfico y la imagen satelital de Google ya a su nitidez final
-    (antes se activaba con la maqueta armada y la foto seguía bajando borrosa al entrar). Tope de 3 min tras la maqueta por si la red no termina. */
- let tAbierta=0,quieta=0;
+ /* La portada se abre cuando el simulador y sus controles están listos.
+    La imagen satelital y los detalles visuales se afinan mientras la persona explora. */
  const listo=()=>{
    if(!loader.classList.contains('hidden'))return 'Cargando la vista inicial…';
-   if(!tAbierta)tAbierta=performance.now();
-   const pasos=document.querySelectorAll('.cv-steps li'),ok=document.querySelectorAll('.cv-steps li.ok').length;
-   if(pasos.length&&ok<pasos.length)return 'Cargando '+(document.querySelector('.cv-steps li:not(.ok)')?.textContent.trim().toLowerCase()||'capas')+'… ('+ok+'/'+pasos.length+')';
-   const T=window.KEN_T3,tl=T&&T.tiles;
-   if(tl){const s=tl.stats,pend=s.downloading+s.parsing,fina=tl.errorTarget<=(T.errPortada||T.errMeta);
-     quieta=(T.mallaMostrada&&fina&&pend===0)?quieta+1:0;
-     if(quieta<4)return 'Cargando imagen satelital… '+(fina?(pend?pend+' teselas por bajar':'afinando'):'nitidez '+Math.round((T.errPortada||T.errMeta)/tl.errorTarget*100)+' %');}
    return '';
  };
  const sync=()=>{
    const falta=listo();
-   if(!falta||(tAbierta&&performance.now()-tAbierta>180000)){clearInterval(iv);start.disabled=false;start.textContent='Iniciar';status.textContent='';}
+   if(!falta){clearInterval(iv);start.disabled=false;start.textContent='Iniciar';status.textContent='';}
    else status.textContent=falta;
  };
  const iv=setInterval(sync,500);sync();
@@ -1561,17 +1553,10 @@ async function initTodoReal() {
       if (!$('b-aves').classList.contains('on')) api.grp.visible = false;
     }).catch(e => { console.warn('aves 3D:', e); buildAves(THREE); registrarAves(); });
     if (KEN) { const t0 = performance.now(); let tilesN = -1, tilesT = performance.now(), tResto = 0;
-      const listo = () => { /* Kennedy: se entra con TODO lo que se ve ya cargado: panel, edificios, vías, árboles, tráfico, cubiertas, Bavaria, El Tintal,
-           conjuntos, el carro real y la foto 3D afinada. Para que llegue antes: la foto 3D baja liviana hasta que está el panel y el INEM (24 MB, un sector
-           que se ve al acercarse) baja después. Tope de seguridad: 150 s. */
+      const listo = () => { /* Los controles y la simulación abren la portada; los detalles 3D siguen cargando detrás. */
         const TR = T3.TRAF, trafN = TR ? TR.steps.filter(Boolean).length : 0, trafOk = TR && trafN >= Math.min(TR.NS, 2 * TR.chunk);
         if (T3.tilesCargadas !== tilesN) { tilesN = T3.tilesCargadas; tilesT = performance.now(); }
-        const falta = !(window.KEN3D && document.getElementById('gs-izq')) ? 'Preparando la simulación…'
-          : document.querySelectorAll('.cv-steps li.ok').length < PASOS.length ? 'Cargando capas…'
-          : !(T3.roofU && T3.roofU.uTechoOn.value > 0) ? 'Cargando cubiertas…'
-          : !(T3.tintal && T3.conjuntos && (GOOGLE || (LIVIANO && !MEDIO) || T3.bavaria)) ? 'Cargando Bavaria, El Tintal y conjuntos…' /* el INEM (inem.glb, 24 MB) ya no detiene la entrada: con una conexión normal eran 60-80 s de espera; baja después y aparece solo */
-          : !QUEST && !trafOk && !T3.traficoRespaldo ? 'Cargando tráfico · ' + Math.min(100, Math.round(100 * trafN / (TR ? 2 * TR.chunk : 1))) + ' %'
-          : ''; /* ya no se espera el modelo 3D del carro (12 s) ni el «Afinando la foto 3D» (5 s): el carro aparece al llegar y la portada URBIA ya espera la foto satelital */
+        const falta = !(window.KEN3D && document.getElementById('gs-izq')) ? 'Preparando la simulación…' : '';
         if (!falta) { $('lmsg').textContent = 'Listo'; setTimeout(abrirPortada, 600); } else { $('lmsg').textContent = falta; setTimeout(listo, 400); } };
       listo(); } /* Kennedy: se entra con TODO cargado (edificios, vías, árboles, tráfico, foto real, cubiertas y panel; máx. 60 s) */ /* Kennedy: la portada con fotos se queda hasta que el modelo y el panel están listos (máx. 30 s), sin mostrar el suelo vacío */
     else abrirPortada(); // se abre en cuanto están los edificios y las capas; lo demás termina de bajar con la píldora de arriba
@@ -3918,3 +3903,4 @@ addEventListener('resize', () => { try { if (T3) { T3.camera.aspect = innerWidth
 </script>
 </body>
 </html>
+
