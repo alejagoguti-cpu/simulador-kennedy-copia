@@ -418,7 +418,7 @@ export function iniciarLimpio({ T3 }) {
     return 1 - METRO_MENOS_CARROS * Math.min(1, d / 52);
   }
   function escoger(id, continuar) {
-    const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo;
+    const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     recorrido.cerrar(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
