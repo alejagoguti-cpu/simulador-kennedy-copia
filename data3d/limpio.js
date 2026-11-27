@@ -461,7 +461,7 @@ export function iniciarLimpio({ T3 }) {
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
-    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b(".play").disabled = false; if (!preparado) RELOJ.pausarAños(true);
+    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); const mostrarRecorrido = S.par >= 2 && S.par <= 6; preparado = true; $b('.play').disabled = false; if (mostrarRecorrido) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
@@ -470,7 +470,7 @@ export function iniciarLimpio({ T3 }) {
     const btn = document.querySelector(`#esim .seg button[data-e="${S.base}"]`); if (btn) btn.click();
     if (window.KEN_PLANBAV) window.KEN_PLANBAV.ver(S.base === 'D');
     // queda en el año 1, en pausa: corre al darle play
-    setTimeout(() => { if (seguir) { if (UI) UI.preparar(id, { desde: Math.min(FIN_SEM, RELOJ.sem) }); } else { reiniciar(); if (UI) UI.preparar(id); } if (!preparado) setTimeout(() => abrirRecorrido(id), 120); }, 60);
+    setTimeout(() => { if (seguir) { if (UI) UI.preparar(id, { desde: Math.min(FIN_SEM, RELOJ.sem) }); } else { reiniciar(); if (UI) UI.preparar(id); } if (mostrarRecorrido) setTimeout(() => abrirRecorrido(id), 120); }, 60);
     // rutas y vehículos de reparto de «Viajes de abastecimiento» (panel escondido): apagados, tiñen el mapa de naranja y pesan
     for (const ms of [400, 1500, 3500]) setTimeout(() => { const vm = document.getElementById('vm-panel'); if (vm) vm.querySelectorAll('button').forEach(b => { if (/^Apagar$/.test(b.textContent.trim()) && !b.classList.contains('on')) b.click(); }); }, ms);
     // la cámara NO se mueve al escoger una simulación: el panel escondido A·B·C·D pide su «vista general» 250 ms después del clic; se cancela
