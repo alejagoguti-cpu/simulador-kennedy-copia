@@ -314,8 +314,8 @@ const fija = (e, at) => { for (const k in at) { const v = String(at[k]); if (e.g
 const tri = (s) => `<svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">${s > 0 ? '<path d="M5 1.5 9 8.2H1z" fill="currentColor"/>' : s < 0 ? '<path d="M5 8.5 9 1.8H1z" fill="currentColor"/>' : '<path d="M1.5 3.6h7M1.5 6.4h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'}</svg>`;
 const sig = (x, d) => { const r = +Math.abs(x).toFixed(d); return (r === 0 ? '±' : x > 0 ? '+' : '−') + num(Math.abs(x), d); };
 
-export function iniciarPanelIndicadores({ R, getM, getFIN }) {
-  const lecturaMapa = iniciarIndicadoresEscena({ R, getM });
+export function iniciarPanelIndicadores({ R, getM, getFIN, T3 }) {
+  const lecturaMapa = iniciarIndicadoresEscena({ R, getM, T3 });
   const FI = crearFichas(); // fichas «qué hizo» de cada obra (data3d/fichas_obras.js)
   if (!document.getElementById('pi-css')) { const st = document.createElement('style'); st.id = 'pi-css'; st.textContent = CSS; document.head.appendChild(st); }
   ponerTip((html, x, y) => (html == null ? tip().ocultar() : tip().mostrar(html, x, y)));

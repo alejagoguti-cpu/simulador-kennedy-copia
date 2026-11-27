@@ -1,8 +1,7 @@
 /* Lectura espacial del indicador: solo usa puntos con coordenadas del modelo semanal. */
 import { INDK, valor, T } from './indicadores_macro.js?v=2';
 
-export function iniciarIndicadoresEscena({ R, getM }) {
-  const T3 = window.KEN_T3;
+export function iniciarIndicadoresEscena({ R, getM, T3 }) {
   if (!T3?.camera || !T3.THREE) return { elegir() {} };
   const caja = document.createElement('div'); caja.id = 'ie-capa'; caja.setAttribute('aria-live', 'polite');
   caja.innerHTML = '<div class="ie-rotulo"><span>LECTURA EN EL TERRITORIO</span><b></b><small></small></div><svg aria-hidden="true"></svg>';
