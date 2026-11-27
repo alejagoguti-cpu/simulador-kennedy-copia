@@ -11,7 +11,7 @@
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
 import { iniciarSimUI } from './sim_ui.js?v=142';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=2';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=3';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
