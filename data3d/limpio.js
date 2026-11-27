@@ -11,7 +11,7 @@
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
 import { iniciarSimUI } from './sim_ui.js?v=148';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=11';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=12';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -380,7 +380,7 @@ export function iniciarLimpio({ T3 }) {
   let yaOblicua = false;
   function alternar() {
     if (!ESC.activo) return;
-    if (!preparado) return;
+    if (document.body.classList.contains("ra-recorrido")) { const d = UI?.R?.def; recorrido.cerrar(); if (d) recorridoAlMostrar(d); } /* Play funciona en cualquier momento (pedido de la autora): las variables que no se tocaron usan su valor por defecto */
     /* la cámara no se mueve sola: la vista oblicua ya está puesta desde el inicio (VISTA) */
     if (RELOJ.pausaSem) { if (RELOJ.sem >= FIN_SEM) reiniciar(); RELOJ.detenerSemEn = FIN_SEM; RELOJ.ponerVelAños(VELS[vel]); RELOJ.pausarAños(false); RELOJ.presupuestoMs = 10; RELOJ.ponerVel(VEL_DIA[vel]); }
     else { RELOJ.pausarAños(true); RELOJ.presupuestoMs = 6; RELOJ.ponerVel(1); }
@@ -410,18 +410,18 @@ export function iniciarLimpio({ T3 }) {
     let aviso = caja.querySelector('#lp-pendientes');
     if (!aviso) { aviso = document.createElement('p'); aviso.id = 'lp-pendientes'; aviso.setAttribute('aria-live', 'polite'); aviso.style.cssText = 'padding:9px 11px;border:1px solid var(--ui-bd2);border-radius:9px;background:var(--ui-acc-bg);color:var(--ui-acc-tx);font:500 11px/1.4 var(--ui-mono)'; caja.appendChild(aviso); }
     const faltan = pendientesVariables.claves.size - pendientesVariables.tocadas.size;
-    aviso.textContent = faltan ? `Configura ${faltan} variable${faltan === 1 ? '' : 's'} para habilitar Play.` : 'Variables completas · Play habilitado.';
+    aviso.textContent = faltan ? `${faltan} variable${faltan === 1 ? '' : 's'} con su valor por defecto · puedes dar Play cuando quieras.` : 'Variables configuradas.';
     /* botón junto a las variables: el mismo play de la barra (alternar), habilitado solo con todas las variables definidas */
     let bp = caja.querySelector('#lp-iniciar');
-    if (!bp) { bp = document.createElement('button'); bp.type = 'button'; bp.id = 'lp-iniciar'; bp.style.cssText = 'display:block;width:100%;margin:8px 0 4px;padding:11px 12px;border-radius:10px;border:1px solid var(--ui-acc);background:var(--ui-acc);color:#14200c;font:700 13px var(--ui-sans);letter-spacing:.02em;cursor:pointer'; bp.onclick = () => { if (preparado) alternar(); }; }
+    if (!bp) { bp = document.createElement('button'); bp.type = 'button'; bp.id = 'lp-iniciar'; bp.style.cssText = 'display:block;width:100%;margin:8px 0 4px;padding:11px 12px;border-radius:10px;border:1px solid var(--ui-acc);background:var(--ui-acc);color:#14200c;font:700 13px var(--ui-sans);letter-spacing:.02em;cursor:pointer'; bp.onclick = () => alternar(); }
     if (bp.previousElementSibling !== aviso) aviso.after(bp);
     syncIniciar();
   }
   function syncIniciar() {
     const bp = document.getElementById('lp-iniciar'); if (!bp) return;
-    const corre = !RELOJ.pausaSem, txt = !preparado ? 'Iniciar simulación · Play' : corre ? 'Pausar simulación' : (RELOJ.sem > 1 ? 'Reanudar simulación · Play' : 'Iniciar simulación · Play');
+    const corre = !RELOJ.pausaSem, txt = corre ? 'Pausar simulación' : (RELOJ.sem > 1 ? 'Reanudar simulación · Play' : 'Iniciar simulación · Play');
     if (bp.textContent !== txt) bp.textContent = txt;
-    if (bp.disabled !== !preparado) { bp.disabled = !preparado; bp.style.opacity = preparado ? '1' : '.42'; bp.style.cursor = preparado ? 'pointer' : 'not-allowed'; }
+    bp.disabled = false;
   }
   document.addEventListener('change', e => {
     const k = e.target?.dataset?.k, p = pendientesVariables;
@@ -433,17 +433,18 @@ export function iniciarLimpio({ T3 }) {
     }
     pintarPendientesVariables();
   });
-  const recorrido = crearRecorridoArquitectura({ T3, alMostrarVariables: def => {
+  const recorridoAlMostrar = def => {
     if (!UI || ESC.activo !== def.id) return;
     const guardados = valoresPar.get(def.par);
     if (guardados) UI.aplicarVariables(guardados);
     pendientesVariables = { id: def.id, par: def.par, claves: new Set(def.sliders.map(s => s.k)), tocadas: new Set(guardados ? def.sliders.map(s => s.k) : []) };
-    preparado = pendientesVariables.tocadas.size === pendientesVariables.claves.size;
-    $b('.play').disabled = !preparado;
+    preparado = true;
+    $b(".play").disabled = false;
     if (matchMedia('(max-width: 760px)').matches && !html.classList.contains('lp-izq-abierto')) document.querySelector('#lp-izq-tog')?.click();
     setTimeout(pintarPendientesVariables, 0);
     setTimeout(pintarPendientesVariables, 150);
-  }, alComenzar: (def, valores) => {
+  };
+  const recorrido = crearRecorridoArquitectura({ T3, alMostrarVariables: recorridoAlMostrar, alComenzar: (def, valores) => {
     if (!UI || ESC.activo !== def.id) return;
     valoresPar.set(def.par, { ...(valoresPar.get(def.par) || {}), ...valores });
     UI.aplicarVariables(valores); preparado = true; $b('.play').disabled = false; alternar();
@@ -460,7 +461,7 @@ export function iniciarLimpio({ T3 }) {
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
-    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
+    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b(".play").disabled = false; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
