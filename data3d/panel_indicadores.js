@@ -16,7 +16,7 @@ import { ARTE, llave, contar, ponerTip } from './graficas_arte.js?v=3';
 import { crearFichas } from './fichas_obras.js?v=2';
 import { T, IND, INDK, MACROS, CLAVE, valor, clavePct, claveArea, acceso, ACCESO_SUP, ACCESO_R, hayEstaciones, SEM_REF } from './indicadores_macro.js?v=2';
 import { FUENTES_PARES } from './sim_fuentes.js';
-import { iniciarIndicadoresEscena } from './indicadores_escena.js?v=1';
+import { iniciarIndicadoresEscena } from './indicadores_escena.js?v=2';
 
 const PASO = 2; // series de 15 años muestreadas cada 2 semanas
 const ICO_FX = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M8.6 4.2c-1.4 0-2 .9-2.3 2.4L5 15.1c-.3 1.4-.9 2-2 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.2 8.4h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m11.4 9 5 6.4M16.4 9l-5 6.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
