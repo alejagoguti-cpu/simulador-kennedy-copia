@@ -10,7 +10,7 @@
    [SUP] METRO_MENOS_CARROS = 0,10: no hay cifra oficial de cuánto tráfico quita la Línea 1. */
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
-import { iniciarSimUI } from './sim_ui.js?v=152';
+import { iniciarSimUI } from './sim_ui.js?v=153';
 import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=14';
 
 export const METRO_SEM_OP = 114;

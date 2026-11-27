@@ -135,7 +135,7 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
     const par = R.def?.par, hay = R.hist?.length, visible = !!(hay && par >= 2 && par <= 6 && !document.body.classList.contains('ra-recorrido'));
     if (caja.classList.contains('on') !== visible) caja.classList.toggle('on', visible);
     if (!visible) { if (!hay) { suave.clear(); semana = -1; } return; }
-    if (par !== parPintado) { parPintado = par; suave.clear(); if (!elegida) clave = POR_DEFECTO[par]; marcarBotones(); ley.innerHTML = (LEY[par] || []).map(([c, n]) => `<li style="--c:${c}">${n}</li>`).join(''); }
+    if (par !== parPintado) { parPintado = par; suave.clear(); elegida = false; clave = POR_DEFECTO[par]; marcarBotones(); ley.innerHTML = (LEY[par] || []).map(([c, n]) => `<li style="--c:${c}">${n}</li>`).join(''); }
     I = R.hist.at(-1); const t = ms / 1000;
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
     let resumen = ''; try { resumen = ESC[par](t); dibujarIndicador(t); } catch (e) { if (!frame.avisado) { frame.avisado = 1; console.warn('lectura espacial:', e); } }
