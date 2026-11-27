@@ -1,8 +1,10 @@
-/* Líneas de base observadas para los pares 02–06. Las pruebas y sus umbrales siguen siendo hipotéticos. */
+/* Datos de partida y modelos trazables de los pares 02–06. Las pruebas y sus umbrales siguen siendo hipotéticos. */
 export const FUENTES_PARES = {
   2: [
     { n: 'Congestión de Bogotá', v: '69,6 % (2025)', alcance: 'Ciudad; proxy para Kennedy', url: 'https://www.tomtom.com/traffic-index/country/colombia/' },
-    { n: 'Tiempo para 10 km', v: '31 min 45 s (2025)', alcance: 'Ciudad; proxy para Kennedy', url: 'https://www.tomtom.com/traffic-index/city/bogota/' }
+    { n: 'Tiempo para 10 km', v: '31 min 45 s (2025)', alcance: 'Ciudad; proxy para Kennedy', url: 'https://www.tomtom.com/traffic-index/city/bogota/' },
+    { n: 'Integración y elección angular', v: '19.484 segmentos; 700 orígenes muestreados', alcance: 'Análisis de red OSM del proyecto; antes del cierre, no aforo observado', url: 'https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/data3d/giro_sim.json' },
+    { n: 'Pasajes de Bavaria', v: '20 conexiones; 61 tramos con cambio', alcance: 'Alternativa arquitectónica modelada', url: 'https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/data3d/sintaxis_proyecto.json' }
   ],
   3: [
     { n: 'Residuos recolectados en Kennedy', v: '23.143,65 t en junio de 2025', alcance: 'Localidad; incluye barrido, césped y poda', url: 'https://www.uaesp.gov.co/sites/default/files/documentos/ASE_3_Informe_de_Supervision_Monitoreo_y_Control_JULIO_2025.pdf' },
@@ -17,7 +19,8 @@ export const FUENTES_PARES = {
     { n: 'Hogares en arriendo', v: '55,1 % (2025)', alcance: 'Bogotá urbana; proxy para Kennedy', url: 'https://regionmetropolitana.gov.co/observatorio/noticias/encuesta-multipropsito-2025-cambios-en-bogot-y-la-regin-en-cuatro-aos-' }
   ],
   6: [
-    { n: 'Presupuesto local asignado', v: 'más de $193.000 millones (2025)', alcance: 'Kennedy; contexto, no equivale a «% de necesidad»', url: 'https://www.kennedy.gov.co/noticias/kennedy-alcanza-mas-del-55-ejecucion-presupuestal-proyectos-alto-impacto-la-comunidad' }
+    { n: 'Presupuesto local asignado', v: 'más de $193.000 millones (2025)', alcance: 'Kennedy; contexto, no equivale a «% de necesidad»', url: 'https://www.kennedy.gov.co/noticias/kennedy-alcanza-mas-del-55-ejecucion-presupuestal-proyectos-alto-impacto-la-comunidad' },
+    { n: 'Juntas de Acción Comunal', v: 'registro de organizaciones comunales', alcance: 'IDPAC; 8 JAC del conjunto se usan como puntos de referencia para las asambleas simuladas', url: 'https://datosabiertos.bogota.gov.co/dataset/organizaciones-comunales' }
   ]
 };
 

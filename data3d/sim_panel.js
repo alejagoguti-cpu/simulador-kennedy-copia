@@ -1,4 +1,5 @@
 import { FUENTES_PARES, ORG_KG_HAB_DIA } from './sim_fuentes.js';
+import { SINTAXIS_02 } from './sim_sintaxis_02.js';
 /* ============ PANEL DE LAS SIMULACIONES 02–06 (mismo formato que la 01 de data3d/ab01_panel.js) ============
    docs/todas_las_simulaciones.md, «Implementación» (2026-11-26). Va en #su-der (acordeón de limpio.js), debajo de los deslizadores de sim_ui.js:
    · ALERTA arriba del todo (degradé URBIA), con el estrés de la simulación; no tapa la franja de eventos (#su-feed baja).
@@ -23,12 +24,13 @@ export const LIM = {
   ruido: { n: 'Ruido de las calles', u: 'dB sobre hoy', v: (I) => I.ruidoDb - I.ruidoDb0, lim: 3, cerca: 2, S: 4, f: (v) => (v < 0 ? '−' : '+') + nf(Math.abs(v), 1) + ' dB', r: (I) => (I.rachas || {}).ruido || 0, txt: 'el ruido promedio sube 3 dB' },
   fauna: { n: 'Especies de fauna', u: '% de las del inicio', v: (I) => I.fauna / Math.max(1, I.fauna0) * 100, lim: 90, min: true, cerca: 94, S: 100, f: (v, I) => I ? `${I.fauna} de ${I.fauna0}` : nf(v) + ' %', r: (I) => (I.rachas || {}).fauna || 0, txt: 'quedan menos del 90 % de las especies' },
   habitat: { n: 'Territorio con fauna', u: '% del inicio', v: (I) => I.pares / Math.max(1, I.pares0) * 100, lim: 70, min: true, cerca: 80, S: 130, f: (v) => nf(v) + ' %', r: (I) => (I.rachas || {}).habitat || 0, txt: 'la ocupación de los corredores verdes cae 30 %' },
+  especie: { n: 'Especie con menor presencia', u: '% antes de la pérdida', v: (I) => I.presenciaEspecie ? I.presenciaEspecie.porcentaje : null, lim: 70, min: true, cerca: 80, S: 100, f: (v) => nf(v, 1) + ' %', r: (I) => I.presenciaEspecie ? I.presenciaEspecie.racha : 0, txt: 'una especie ocupa 30 % menos parches que antes del deterioro' },
   humedal: { n: 'Humedales que funcionan', u: '% del área de hoy', v: (I) => I.humedalFuncional, lim: 70, min: true, cerca: 80, S: 110, f: (v) => nf(v) + ' %', r: (I) => (I.rachas || {}).humedal || 0, txt: 'los humedales pierden 30 % de su área funcional' },
   residuos: { n: 'Orgánicos en las Estaciones', u: '% del almacenamiento', v: (I) => I.residuos * 100, lim: 100, cerca: 85, S: 130, f: (v) => nf(v) + ' %', r: (I) => (I.rachas || {}).residuos || 0, txt: 'los orgánicos pendientes pasan el almacenamiento' } };
 export const malo = (k, v) => (LIM[k].min ? v < LIM[k].lim : v >= LIM[k].lim);
 const cercaDe = (k, v) => (LIM[k].min ? v < LIM[k].cerca : v >= LIM[k].cerca);
 /* límites que mueve cada prueba (las 7 reglas siguen activas en todas: si cae otra, se agrega su fila) */
-export const PAR_LIM = { 2: ['abasto', 'ruido', 'trafico', 'fauna'], 3: ['residuos', 'humedal', 'fauna'], 4: ['fauna', 'habitat', 'humedal'], 5: ['trafico', 'humedal', 'ruido'], 6: ['humedal', 'abasto', 'habitat'] };
+export const PAR_LIM = { 2: ['abasto', 'ruido', 'trafico', 'fauna'], 3: ['residuos', 'humedal', 'fauna'], 4: ['especie', 'fauna', 'habitat', 'humedal'], 5: ['trafico', 'humedal', 'ruido'], 6: ['humedal', 'abasto', 'habitat'] };
 
 /* ---------- lo propio de cada simulación ---------- */
 const desvio = (I) => (I.cierre && I.cierre.fase ? I.cierre.traficoDesvio : 1);
@@ -40,12 +42,14 @@ export const PAR_CFG = {
       if (s < t0) return ['Se cerrará la Av. de las Américas', 'en ' + nf(t0 - s) + ' sem'];
       if (s < t0 + d) return ['Se cerró la Av. de las Américas', '+' + nf((desvio(I) - 1) * 100) + ' % en la 1.º de Mayo'];
       return ['Vía reabierta', 'cerró ' + nf(d) + ' sem']; },
-    vivo: [['Tráfico en la Av. Primero de Mayo', (I) => desvio(I) * 100, 200, (v) => nf(v) + ' %'], ['Bienestar de las aves', (I) => I.avesRuido ? I.avesRuido.bienestarFauna * 100 : null, 100, (v) => nf(v, 1) + ' %'], ['Animales muertos esta semana', (I) => I.muertes ? I.muertes.semana : null, 100, (v) => nf(v)]],
+    vivo: [['Integración angular · pasajes', (I) => I.propuesta ? SINTAXIS_02.integracionCon : SINTAXIS_02.integracionSin, 1, (v) => nf(v, 3)], ['Elección angular · pasajes', (I) => I.propuesta ? SINTAXIS_02.eleccionCon : SINTAXIS_02.eleccionSin, 1, (v) => nf(v, 3)], ['Tráfico en la Av. Primero de Mayo', (I) => desvio(I) * 100, 200, (v) => nf(v) + ' %'], ['Tiempo para 10 km · desvío', (I) => I.tiempoDesvio10km ?? I.tiempo10km, 60, (v) => nf(v, 1) + ' min'], ['Ruido extra en el desvío', (I) => I.cierre ? I.cierre.ruidoExtraDb : 0, 5, (v) => '+' + nf(v, 1) + ' dB']],
     graf: [{ t: '¿Cuánto tráfico se desvía?', s: [{ f: (I) => desvio(I) * 100, n: 'Primero de Mayo' }], fmt: (v) => nf(v) + ' %', sub: (I) => `100 % = tráfico normal. Hoy: ${nf(desvio(I) * 100)} %; el ruido allí sube ${nf(10 * Math.log10(desvio(I)), 1)} dB.` },
       { t: '¿Llega la comida?', s: [{ f: (I) => I.comidaMin * 100, n: 'sector peor' }], lim: 80, limTxt: 'game over < 80 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Las rutas por la vía cerrada se alargan: el sector peor recibe ${nf(I.comidaMin * 100, 1)} % de lo que necesita.` },
       { t: '¿Cómo están las aves?', s: [{ f: (I) => I.avesRuido ? I.avesRuido.bienestarFauna * 100 : null, n: 'bienestar' }], fmt: (v) => nf(v, 1) + ' %', sub: (I) => `Bienestar de las aves frente al ruido (1 hasta 50 dB, 0 en 75 dB). Ruido promedio donde viven: ${nf(I.avesRuido && I.avesRuido.dbAves, 1)} dB.` },
       { t: '¿Cuántos animales mueren?', s: [{ f: (I) => I.muertes ? I.muertes.total : null, n: 'acumulados' }], fmt: (v) => nf(v), sub: (I) => `Choques, atropellos, ruido y hambre desde el año 1. Por ruido: ${nf(I.muertes && I.muertes.porCausa.ruido)}.` }],
-    fx: [['Tráfico desviado', (I) => nf(desvio(I) * 100) + ' %', (I, v) => `1 + «desvío a la Primero de Mayo» ${nf(v.desvioMayo)} % × fase del cierre ${nf(I.cierre ? I.cierre.fase : 0, 2)}${I.propuesta ? ' × 2/3 (tercera ruta por Bavaria Común, supuesto)' : ''}`],
+    fx: [['Integración angular', (I) => nf(I.propuesta ? SINTAXIS_02.integracionCon : SINTAXIS_02.integracionSin, 3), () => `Promedio ponderado por longitud de ${SINTAXIS_02.tramos} tramos de la red OSM modificados por los ${SINTAXIS_02.pasajes} pasajes de Bavaria. Base previa al cierre; no se recalcula con el cierre. Integración = cercanía angular de la red (Space Syntax).`],
+      ['Elección angular', (I) => nf(I.propuesta ? SINTAXIS_02.eleccionCon : SINTAXIS_02.eleccionSin, 3), () => `Promedio ponderado por longitud de los mismos ${SINTAXIS_02.tramos} tramos. Elección = centralidad de paso angular (Space Syntax). Base previa al cierre; los recorridos y desvíos sí cambian durante la prueba.`],
+      ['Tráfico desviado', (I) => nf(desvio(I) * 100) + ' %', (I, v) => `1 + «desvío a la Primero de Mayo» ${nf(v.desvioMayo)} % × fase del cierre ${nf(I.cierre ? I.cierre.fase : 0, 2)}${I.propuesta ? ' × 2/3 (tercera ruta por Bavaria Común, supuesto)' : ''}`],
       ['Ruido extra en el desvío', (I) => '+' + nf(10 * Math.log10(desvio(I)), 1) + ' dB', () => '10 × log10(tráfico desviado)'],
       ['Bienestar de las aves', (I) => nf(I.avesRuido && I.avesRuido.bienestarFauna * 100, 1) + ' %', () => 'Σ aves × B(L) ÷ Σ aves · B = 1 hasta 50 dB y 0 en 75 dB (Shannon et al. 2016; 75 dB supuesto) · los corredores verdes a 600 m del desvío reciben su tráfico × tráfico desviado'],
       ['Comida en el sector peor', (I) => nf(I.comidaMin * 100, 1) + ' %', () => 'recibido ÷ necesidad del sector · las rutas que pasan por la vía cerrada se alargan (sim_vida.js) · game over bajo 80 % 4 semanas'],
@@ -65,24 +69,27 @@ export const PAR_CFG = {
   4: { titulo: 'Pérdida de un corredor verde',
     alerta(I, val) { const s = I ? I.sem : 0, F = I && I.fragmento, n = ['El Burro', 'Techo', 'La Vaca', 'Bosque de Bavaria'][Math.max(1, Math.min(4, Math.round(val.parche))) - 1];
       if (s < val.parcheT0) return ['Se perderá parte de ' + n, 'en ' + nf(val.parcheT0 - s) + ' sem']; return ['Se perdió parte de ' + n, '−' + nf(val.parchePerdida) + ' %' + (F ? ' · ' + nf(F.haPerdidas, 1) + ' ha' : '')]; },
-    vivo: [['Especies de fauna', (I) => I.fauna / Math.max(1, I.fauna0) * 100, 100, (v) => nf(v) + ' %'], ['Corredores verdes conectados', conect, 100, (v) => nf(v) + ' %'], ['Territorio con fauna', (I) => I.pares / Math.max(1, I.pares0) * 100, 130, (v) => nf(v) + ' %']],
+    vivo: [['Presencia de la especie más afectada', (I) => I.presenciaEspecie ? I.presenciaEspecie.porcentaje : null, 100, (v) => nf(v, 1) + ' %'], ['Corredores verdes conectados', conect, 100, (v) => nf(v) + ' %'], ['Territorio con fauna', (I) => I.pares / Math.max(1, I.pares0) * 100, 130, (v) => nf(v) + ' %']],
     graf: [{ t: '¿Cuántas especies quedan?', s: [{ f: (I) => I.fauna / Math.max(1, I.fauna0) * 100, n: 'especies' }], lim: 90, limTxt: 'game over < 90 %', fmt: (v) => nf(v) + ' %', sub: (I) => `${I.fauna} de las ${I.fauna0} especies de fauna del inicio.` },
       { t: '¿Cuánto territorio ocupa la fauna?', s: [{ f: (I) => I.pares / Math.max(1, I.pares0) * 100, n: 'ocupación' }], lim: 70, limTxt: 'game over < 70 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Pares especie × corredor verde ocupados frente al inicio: ${nf(I.pares)} de ${nf(I.pares0)}.` },
       { t: '¿Están conectados los corredores verdes?', s: [{ f: conect, n: 'conectados' }], fmt: (v) => nf(v) + ' %', sub: (I) => `Corredores verdes del componente más grande con conexiones sanas: ${nf(conect(I))} %.` },
       { t: '¿Aguantan los humedales?', s: [{ f: (I) => I.humedalFuncional, n: 'funcionan' }], lim: 70, limTxt: 'game over < 70 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Área sin rellenar × calidad frente a la basura: ${nf(I.humedalFuncional)} % de hoy.` }],
-    fx: [['Calidad del corredor verde perdido', (I, v) => nf(Math.sqrt(Math.max(0, 1 - v.parchePerdida / 100)) * 100) + ' %', (I, v) => `√(1 − ${nf(v.parchePerdida)} %) desde la semana ${nf(v.parcheT0)} (dependencia con el área de sim_vida.js)`],
+    fx: [['Presencia de la especie más afectada', (I) => I.presenciaEspecie ? `${nf(I.presenciaEspecie.porcentaje, 1)} % · ${I.presenciaEspecie.n}` : '—', (I) => I.presenciaEspecie ? `${I.presenciaEspecie.actual} parches ocupados ÷ ${I.presenciaEspecie.inicial} justo antes del deterioro. Game over si una especie cae al 70 % o menos durante 4 semanas desde la prueba; umbral de simulación, no límite ecológico medido.` : 'La referencia se toma justo antes del deterioro elegido.'],
+      ['Calidad del corredor verde perdido', (I, v) => nf(Math.sqrt(Math.max(0, 1 - v.parchePerdida / 100)) * 100) + ' %', (I, v) => `√(1 − ${nf(v.parchePerdida)} %) desde la semana ${nf(v.parcheT0)} (dependencia con el área de sim_vida.js)`],
       ['Especies de fauna', (I) => `${I.fauna} de ${I.fauna0}`, () => 'especies presentes ÷ las del inicio · game over < 90 % 4 semanas (Steffen et al. 2015; aplicado a las 23 especies: supuesto)'],
       ['Territorio con fauna', (I) => nf(I.pares / Math.max(1, I.pares0) * 100) + ' %', () => 'pares especie × corredor verde ocupados ÷ los del inicio (metapoblación de Levins) · game over ≤ 70 % 4 semanas'],
       ['Corredores verdes conectados', (I) => nf(conect(I)) + ' %', () => 'corredores verdes del componente más grande con conexiones f ≥ 0,5 ÷ corredores verdes'],
       ['Árboles en parques', (I) => nf(I.arboles, 2), (I, v) => `deslizador ${nf(v['P3.arboles'], 2)}${I.propuesta ? ' + 0,2 en 5 años (conexiones vegetales de la propuesta, supuesto)' : ' con tala neta del estado actual'}`]] },
-  5: { titulo: 'Presión inmobiliaria',
-    alerta(I) { return ['Sube el precio del suelo', '+' + nf(I ? (I.especulacion.indice - 1) * 100 : 0, 1) + ' %']; },
-    vivo: [['Precio del suelo', (I) => (I.especulacion.indice - 1) * 100, 60, (v) => '+' + nf(v, 1) + ' %'], ['Hogares en riesgo', (I) => I.especulacion.hogaresRiesgo, 60000, (v) => nf(v)], ['Tráfico', (I) => I.trafico * 100, 150, (v) => nf(v) + ' %']],
+  5: { titulo: 'Población y presión inmobiliaria',
+    alerta(I) { return ['Crece la población', I ? nf(I.poblacionKennedy) + ' habitantes' : 'la misma prueba en ambos escenarios']; },
+    vivo: [['Habitantes de Kennedy', (I) => I.poblacionKennedy, 1600000, (v) => nf(v)], ['Zonas con uso desplazado o cambiado', (I) => I.suelo ? I.suelo.desplazadas + I.suelo.cambian : null, 30, (v) => nf(v)], ['Hogares en riesgo', (I) => I.especulacion.hogaresRiesgo, 60000, (v) => nf(v)]],
     graf: [{ t: '¿Cuánto sube el suelo?', s: [{ f: (I) => (I.especulacion.indice - 1) * 100, n: 'alza' }], fmt: (v) => '+' + nf(v, 1) + ' %', sub: (I) => `Alza promedio junto al metro y al predio de Bavaria: ×${nf(I.especulacion.indice, 2)}.` },
       { t: '¿Cuántos hogares están en riesgo?', s: [{ f: (I) => I.especulacion.hogaresRiesgo, n: 'hogares' }], fmt: (v) => nf(v), sub: (I) => `Hogares arrendatarios que no podrían pagar el alza: ${nf(I.especulacion.hogaresRiesgo)}.` },
-      { t: '¿Cuánto tráfico hay?', s: [{ f: (I) => I.trafico * 100, n: 'tráfico' }], lim: 130, limTxt: 'game over > 130 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Más gente, más carros: ${nf(I.trafico * 100)} % del tráfico de hoy.` },
+      { t: '¿Cuánta población recibe Kennedy?', s: [{ f: (I) => I.poblacionKennedy, n: 'habitantes' }], fmt: (v) => nf(v), sub: (I) => `${nf(I.poblacionKennedy)} habitantes en esta semana; la tasa de crecimiento de la prueba es la misma con y sin propuesta.` },
       { t: '¿Aguantan los humedales?', s: [{ f: (I) => I.humedalFuncional, n: 'funcionan' }], lim: 70, limTxt: 'game over < 70 %', fmt: (v) => nf(v) + ' %', sub: (I) => `La población que crece deja más basura en sus bordes: ${nf(I.humedalFuncional)} % de hoy.` }],
-    fx: [['Precio del suelo', (I) => '×' + nf(I.especulacion.indice, 3), (I, v) => `1 + (13 % × metro + 25 % × plan parcial + ${nf(v.presionSuelo, 1)} %/año × años) × (1 − 0,5 × protección ${nf(I.especulacion.proteccion * 100)} %)`],
+    fx: [['Población', (I) => nf(I.poblacionKennedy) + ' habitantes', (I, v) => `población inicial × (1 + ${nf(v.pobCrece, 1)} %/año)^(semana/52) + habitantes del plan parcial, si existen; tasa de estrés [SUP] igual en ambas corridas`],
+      ['Zonas transformadas', (I) => nf(I.suelo && I.suelo.desplazadas + I.suelo.cambian), () => 'zonas de crecimiento cuyo uso pasa a desplazado o cambiado según el índice de precio y la protección; reglas de ocupación [SUP]'],
+      ['Precio del suelo', (I) => '×' + nf(I.especulacion.indice, 3), (I, v) => `1 + (13 % × metro + 25 % × plan parcial + ${nf(v.presionSuelo, 1)} %/año × años) × (1 − 0,5 × protección ${nf(I.especulacion.proteccion * 100)} %)`],
       ['Hogares en riesgo', (I) => nf(I.especulacion.hogaresRiesgo), () => 'Σ hogares × 55,1 % en arriendo (Encuesta Multipropósito 2025, Bogotá urbana: proxy para Kennedy) × mín(1, alza) × (1 − protección). La relación entre alza y riesgo es supuesta.'],
       ['Tráfico', (I) => nf(I.trafico * 100) + ' %', (I, v) => `carros ${nf(v.trafCrece, 1)} %/año × población (${nf(v.pobCrece, 1)} %/año) · metro −10 % junto al corredor · game over ≥ 130 % 4 semanas (meta del Plan de Movilidad 2023: 1 ÷ 0,77)`],
       ['Humedales que funcionan', (I) => nf(I.humedalFuncional) + ' %', () => 'área sin rellenar × calidad frente a la basura del borde · game over < 70 % 4 semanas']] },
@@ -104,6 +111,7 @@ const CSS = `
 #sp-fuentes{margin:10px 0;padding:9px 11px;border:1px solid rgba(79,209,197,.3);border-radius:10px;font:12px/1.45 var(--ui-sans,Inter,system-ui,sans-serif)}
 #sp-fuentes summary{cursor:pointer;font-weight:700;color:#4fd1c5}
 #sp-fuentes ul{margin:9px 0;padding-left:18px}#sp-fuentes li{margin:5px 0}#sp-fuentes a{color:inherit;text-decoration:underline}#sp-fuentes small{display:block;opacity:.72}#sp-fuentes p{margin:8px 0 0;opacity:.8}
+#sp-vivo [data-vi],#sp-go [data-go]{cursor:pointer}#sp-vivo [data-vi]:focus-visible,#sp-go [data-go]:focus-visible{outline:2px solid #4fd1c5;outline-offset:2px}
 #sp-alerta{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:46;display:flex;gap:9px;align-items:center;max-width:calc(100vw - 32px);white-space:nowrap;padding:6px 6px 6px 12px;border-radius:12px;
   background:linear-gradient(100deg,#304ffe 0%,#3d8fe6 55%,#4fd1c5 100%);border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 22px rgba(20,40,110,.35);text-shadow:0 1px 2px rgba(10,20,60,.45);color:#fff;overflow:hidden;font:400 11.5px/1.35 var(--ui-sans,Inter,system-ui,sans-serif)}
 #sp-alerta[hidden]{display:none}#sp-alerta>svg{width:16px;height:16px;flex:none;animation:spIco 1.1s ease-in-out infinite}
@@ -159,7 +167,7 @@ addEventListener('resize', () => feedBajo());
 let GO = null, PAR = null, VAL = {}, VISTA = 0;
 export function quitar() { const a = document.getElementById('sp-alerta'); if (a) { a.remove(); const f = document.getElementById('su-feed'); if (f && !document.getElementById('ab-alerta')) f.style.top = ''; }
   const p = document.getElementById('sp-fxp'); if (p) p.remove(); GO = null; PAR = null; }
-const GO_N = { abasto: 'Abastecimiento', trafico: 'Tráfico', ruido: 'Ruido', fauna: 'Fauna', habitat: 'Hábitat', humedal: 'Humedales', residuos: 'Residuos' };
+const GO_N = { abasto: 'Abastecimiento', trafico: 'Tráfico', ruido: 'Ruido', fauna: 'Fauna', especie: 'Presencia de especie', habitat: 'Hábitat', humedal: 'Humedales', residuos: 'Residuos' };
 export function gameOver(g) { GO = g || null; const a = alertaArriba(); a.hidden = false; a.classList.toggle('go', !!GO);
   if (GO) { const L = LIM[GO.regla], v = GO.valor != null ? (GO.regla === 'trafico' ? GO.valor * 100 : GO.valor) : null;
     a.innerHTML = `${ICO_ALERTA}<b>Game over · año ${año(GO.sem)}</b><span>${GO_N[GO.regla] || GO.regla}${GO.lugar && GO.lugar !== 'Kennedy' ? ' · ' + GO.lugar : ''}</span><strong>${L && v != null ? L.f(v) : ''}</strong><span class="go4">4 semanas seguidas</span>`; }
@@ -170,7 +178,7 @@ function marcarGo(der) { der.querySelectorAll('#sp-go .r').forEach(e => e.classL
 /* ---------- HTML y montaje ---------- */
 const filaLim = (k) => { const L = LIM[k]; return `<div class="r" data-go="${k}" title="Game over si ${L.txt} 4 semanas seguidas"><span>${L.n}</span><b>—</b><i><u></u><s style="left:${(L.lim / L.S * 100).toFixed(1)}%"></s></i></div>`; };
 export function htmlAbajo(def) { const C = PAR_CFG[def && def.par]; if (!C) return '';
-  return `<div id="sp-vivo"><h6>En vivo · se mueve solo</h6>${C.vivo.map(([n], i) => `<div class="r" data-vi="${i}"><span>${n}</span><b>—</b><i><u></u></i></div>`).join('')}</div>
+  return `<div id="sp-vivo"><h6>Índices · pulsa para ver su origen</h6>${C.vivo.map(([n], i) => `<div class="r" data-vi="${i}" role="button" tabindex="0" aria-label="Ver fórmula y fuentes de ${n}"><span>${n}</span><b>—</b><i><u></u></i></div>`).join('')}</div>
     <details id="sp-fuentes"><summary>Datos de partida · fuentes</summary><ul>${(FUENTES_PARES[def.par] || []).map(F => `<li><a href="${F.url}" target="_blank" rel="noopener noreferrer">${F.n}: ${F.v}</a><small>${F.alcance}</small></li>`).join('')}</ul><p>Los cambios de la prueba, las tasas sin medición y los límites de game over son supuestos del modelo.</p></details>
     <button type="button" id="sp-fx" aria-haspopup="dialog" title="Cómo se calcula cada variable y cada gráfica">${ICO_FX}<span>Fórmulas</span></button>
     <div id="sp-go" aria-live="polite"><h6 title="4 semanas seguidas pasando un límite = game over. Mismos límites con y sin propuesta.">Game over · límites</h6>${PAR_LIM[def.par].map(filaLim).join('')}</div>
@@ -181,6 +189,7 @@ export function montar(der, { def, R } = {}) {
   if (PAR !== def.par) VISTA = 0; PAR = def.par; VAL = R ? R.valores : {}; GO = null; alertaArriba().classList.remove('go');
   der.querySelectorAll('#sp-graf [data-g]').forEach(b => { b.setAttribute('aria-selected', +b.dataset.g === VISTA); b.onclick = () => { VISTA = +b.dataset.g; der.querySelectorAll('#sp-graf [data-g]').forEach(x => x.setAttribute('aria-selected', x === b)); if (der._spRepinta) der._spRepinta(); }; });
   const fx = der.querySelector('#sp-fx'); if (fx) fx.onclick = () => abrirFx(der);
+  for (const row of der.querySelectorAll('#sp-vivo [data-vi],#sp-go [data-go]')) { row.tabIndex = 0; row.setAttribute('role', 'button'); row.setAttribute('aria-label', 'Ver fórmula y fuentes de ' + row.querySelector('span')?.textContent); row.onclick = () => abrirFx(der); row.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirFx(der); } }; }
 }
 /* ---------- fórmulas ---------- */
 function abrirFx(der) { let p = document.getElementById('sp-fxp');
@@ -191,10 +200,11 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') { const p = documen
 function pintarFx(der) { const p = document.getElementById('sp-fxp'); if (!p || p.hidden) return;
   const H = der._spH || [], I = H[H.length - 1], C = PAR_CFG[PAR]; if (!C) return;
   const f = (n, v, t) => `<div><dt>${n}<b>${v}</b></dt><dd>${t}</dd></div>`;
-  let h = `<button type="button" class="x" aria-label="Cerrar las fórmulas">${ICO_X}</button><h3>Fórmulas · ${C.titulo}</h3><p>${I ? `Semana ${nf(I.sem)} (año ${año(I.sem)}), ${I.propuesta ? 'con' : 'sin'} propuesta.` : 'Dale play: los valores aparecen semana a semana.'} Fuentes y supuestos: docs/todas_las_simulaciones.md.</p>`;
+  let h = `<button type="button" class="x" aria-label="Cerrar las fórmulas">${ICO_X}</button><h3>Fórmulas · ${C.titulo}</h3><p>${I ? `Semana ${nf(I.sem)} (año ${año(I.sem)}), ${I.propuesta ? 'con' : 'sin'} propuesta.` : 'Dale play: los valores aparecen semana a semana.'} Cada valor semanal sale del modelo; los datos de partida observados se citan abajo.</p>`;
   if (I) { h += `<h4>Variables</h4><dl>${C.fx.map(([n, v, t]) => { let a = '—', b = ''; try { a = v(I, VAL); b = t(I, VAL); } catch (e) { /* dato que falta */ } return f(n, a, b); }).join('')}</dl>`;
     h += `<h4>Límites · game over</h4><dl>${PAR_LIM[PAR].map(k => { const L = LIM[k]; return f(L.n, L.f(L.v(I), k === 'fauna' ? I : null), `game over si ${L.txt} 4 semanas seguidas · límite ${L.f(L.lim)}`); }).join('')}</dl>`;
     h += `<h4>Gráficas</h4><dl>${C.graf.map((g, i) => f(`${i + 1} · ${g.t}`, '', g.sub(I))).join('')}${f(`${C.graf.length + 1} · Con frente a sin`, '', 'los mismos límites en la misma semana de las dos corridas (mismos valores de las variables)')}</dl>`; }
+  h += `<h4>Datos de partida · origen</h4><dl>${(FUENTES_PARES[PAR] || []).map(S => f(S.n, S.v, `<a href="${S.url}" target="_blank" rel="noopener noreferrer">${S.alcance} · abrir fuente</a>`)).join('')}</dl><p>Los porcentajes de las pruebas y los límites de game over son hipótesis salvo cuando se indica una medición. <a href="https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/docs/calibracion_02_06.md" target="_blank" rel="noopener noreferrer">Trazabilidad completa</a>.</p>`;
   if (p._h !== h) { p.innerHTML = h; p._h = h; p.querySelector('.x').onclick = cerrarFx; } }
 
 /* ---------- repintar (sim_ui.js, como mucho 4 veces por segundo) ---------- */

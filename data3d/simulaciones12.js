@@ -299,10 +299,10 @@ export const PARES = [
     sin: 'Las especies responden al hábitat y las barreras existentes.', con: 'Se incorporan conexiones vegetales, refugios y restauración de hábitat.',
     visible: 'Hábitat, especies y conexiones: ocupación de corredores verdes y desplazamientos posibles.',
     pregSin: '¿Qué pasaría si se pierde parte de un humedal o del bosque de Bavaria y las especies solo tienen los corredores verdes de hoy?', pregCon: '¿Qué pasaría si se pierde parte de un humedal o del bosque de Bavaria y hay conexiones vegetales, refugios y restauración?' },
-  { par: 5, n: '05 Población y especulación', prueba: 'Aumento de la presión inmobiliaria sobre sectores con crecimiento poblacional', capa: 'suelo',
+  { par: 5, n: '05 Población y especulación', prueba: 'Aumento de la población bajo las mismas condiciones en ambos escenarios', capa: 'suelo',
     sin: 'Los inmuebles y actividades responden a la presión de mercado bajo las reglas de referencia.', con: 'Se implementan espacios productivos y comunitarios protegidos e instrumentos de gestión del suelo.',
     visible: 'Usos del suelo y presión inmobiliaria: actividades que permanecen, se desplazan o cambian de uso.',
-    pregSin: '¿Qué pasaría si sube el precio del suelo junto al metro y Bavaria y nada protege a quienes viven y trabajan ahí?', pregCon: '¿Qué pasaría si sube el precio del suelo pero hay espacios productivos y comunitarios protegidos e instrumentos de gestión del suelo?' },
+    pregSin: '¿Qué pasaría si aumenta la población y los predios siguen cambiando de uso sin protección colectiva?', pregCon: '¿Qué pasaría si aumenta igual la población y las manzanas colectivas protegen usos productivos, comunitarios y ecológicos?' },
   { par: 6, n: '06 Gobernanza política', prueba: 'Recursos insuficientes para atender simultáneamente las necesidades de varios barrios', capa: 'gobernanza',
     sin: 'Una coordinación central decide dónde asignarlos.', con: 'Las asambleas locales presentan prioridades y una federación con vocerías rotativas coordina su distribución.',
     visible: 'Asambleas, recursos y decisiones: acuerdos, asignaciones y equipamientos que se habilitan.',
@@ -341,8 +341,9 @@ const PAR_SL = {
   4: [{ k: 'parche', n: 'Corredor verde que se pierde', val: 1, opciones: [[1,'Humedal El Burro'],[2,'Humedal de Techo'],[3,'Humedal La Vaca'],[4,'Bosque de Bavaria']], ayuda: 'El lugar elegido recibe la pérdida de área y cambia la red de especies.' },
     { k: 'parchePerdida', n: 'Área del corredor verde que se pierde', min: 10, max: 100, paso: 5, val: 50, unidad: '%', ayuda: 'Relleno, obra o fragmentación: la calidad del corredor verde baja como la raíz del área que queda.' },
     { k: 'parcheT0', n: 'Semana en que se pierde', min: 1, max: 1000, paso: 1, val: 104, unidad: 'semana', ayuda: 'Semana del modelo en que ocurre la pérdida.' }, sArb, sRec],
-  5: [{ k: 'presionSuelo', n: 'Presión inmobiliaria extra', min: 0, max: 10, paso: 0.5, val: 3, unidad: '%/año', ayuda: 'Alza anual extra del suelo en los sectores que crecen (junto a las estaciones del metro y a Bavaria) [SUP: la prueba].' },
-    sPob(1), { k: 'proteccion', n: 'Instrumentos de gestión del suelo (propuesta)', min: 0, max: 100, paso: 5, val: 50, unidad: '%', ayuda: 'Solo en la corrida con propuesta: captura de plusvalías, vivienda protegida y suelo comunitario; frena esa parte del alza en arriendos.' }, sTraf],
+  5: [{ ...sPob(1), n: 'Aumento de la población · prueba compartida', ayuda: 'La misma tasa anual se aplica con y sin propuesta; cambia la densidad, la demanda y la presión sobre predios. El 1 % inicial es un supuesto de estrés.' },
+    { k: 'presionSuelo', n: 'Presión inmobiliaria adicional', min: 0, max: 10, paso: 0.5, val: 3, unidad: '%/año', ayuda: 'Supuesto de sensibilidad sobre el precio del suelo, adicional al crecimiento poblacional. Se aplica igual en ambos escenarios.' },
+    { k: 'proteccion', n: 'Instrumentos de gestión del suelo (propuesta)', min: 0, max: 100, paso: 5, val: 50, unidad: '%', ayuda: 'Solo en la corrida con propuesta: captura de plusvalías, vivienda protegida y suelo comunitario; frena esa parte del alza en arriendos.' }, sTraf],
   6: [{ k: 'presupuesto', n: 'Recursos disponibles', min: 10, max: 100, paso: 5, val: 50, unidad: '% de la necesidad', ayuda: 'Recursos de cada ronda frente a lo que piden todos los sectores juntos [SUP: la prueba].' },
     { k: 'decisionCada', n: 'Semanas entre rondas de asignación', min: 4, max: 52, paso: 1, val: 13, unidad: 'semanas', ayuda: 'Cada cuánto se reparten los recursos.' },
     { k: 'P1.rotacion', n: 'Rotación de vocerías', min: 2, max: 52, paso: 1, val: 12, unidad: 'semanas', ayuda: 'Cada cuánto rota la vocería de las asambleas (con propuesta): rotar seguido evita el desgaste de las vocerías.' }, sPob(), { k: 'P1.cupos', n: 'Promotores por cohorte', min: 0, max: 40, paso: 1, val: 12, unidad: 'por trimestre', ayuda: 'Promotores que forma Bavaria Común cada 13 semanas (con propuesta).' }] };
@@ -353,11 +354,11 @@ const SL_HUERTAS = { k: 'huertasH', n: 'Huertas hidropónicas (auto o meta al a�
 const SL_CUBIERTAS = { k: 'tipoCubierta', n: 'Cubiertas donde instalar huertas', val: 0, opciones: [[0,'Edificios de 15 pisos · Catastro'],[1,'Edificios de 2 pisos · altura estimada']], ayuda: 'Cambia las cubiertas elegibles. Las de 2 pisos se identifican por los 6 m del modelo 3D, no por catastro verificado.' };
 const SL_ESTACION = { k: 'estacionObjetivo', n: 'Dónde instalar Estaciones Circulares', val: -1, opciones: [[-1,'Toda la red de mercados'], ...MERCADOS.map((M,k) => [k,M.n])], ayuda: 'Elegir un mercado limita la intervención, la capacidad y los recorridos a ese punto.' };
 const SL_SUELO = { k: 'zonaSuelo', n: 'Zona de presión y protección', val: -1, opciones: [[-1,'Todas las zonas de crecimiento'], ...METRO_SUP.EST.map((S,k) => [k,'Metro · '+S.n]), [METRO_SUP.EST.length,'Entorno de Bavaria']], ayuda: 'La presión extra y, con propuesta, la protección se aplican en el entorno elegido.' };
-const SL_BARRIO = { k: 'barrioPrioritario', n: 'Barrio priorizado para asignación', val: -1, opciones: [[-1,'Todos los sectores']], ayuda: 'Con propuesta, la asamblea del barrio elegido recibe doble peso en el reparto de recursos; los demás siguen participando.' };
+const SL_BARRIO = { k: 'barrioPrioritario', n: 'Sector al que asignar prioridad', val: -1, opciones: [[-1,'Todos los sectores']], ayuda: 'La persona elige el mismo sector en las dos corridas. Su peso se duplica al repartir los recursos; sin propuesta decide la oficina central y con propuesta las asambleas federadas.' };
 export const SIMS = [];
 for (const P of PARES) for (const prop of [false, true]) SIMS.push({ id: 2 * P.par - (prop ? 0 : 1), par: P.par, propuesta: prop, parN: P.n, prueba: P.prueba, capa: P.capa,
   n: P.n.slice(3) + (prop ? ' · con propuesta' : ' · sin propuesta'), corto: P.n.slice(3) + (prop ? ' · con' : ' · sin'), base: prop ? 'C' : 'A', grupo: prop ? 'propuesta' : 'actual',
-  pregunta: prop ? P.pregCon : P.pregSin, desc: prop ? P.con : P.sin, visible: P.visible, sliders: P.par === 1 && prop ? [...PAR_SL[1], SL_MERC, SL_HUERTAS, SL_CUBIERTAS] : P.par === 3 && prop ? [...PAR_SL[3], SL_ESTACION] : P.par === 5 ? [...PAR_SL[5], SL_SUELO] : P.par === 6 && prop ? [...PAR_SL[6], SL_BARRIO] : PAR_SL[P.par] });
+  pregunta: prop ? P.pregCon : P.pregSin, desc: prop ? P.con : P.sin, visible: P.visible, sliders: P.par === 1 && prop ? [...PAR_SL[1], SL_MERC, SL_HUERTAS, SL_CUBIERTAS] : P.par === 3 && prop ? [...PAR_SL[3], SL_ESTACION] : P.par === 5 ? [...PAR_SL[5], SL_SUELO] : P.par === 6 ? [...PAR_SL[6], SL_BARRIO] : PAR_SL[P.par] });
 /* SIMULACIONES BASE (fondo que siempre corre), sin prueba de estrés: 13 = Kennedy hoy (escenario D de sim_vida.js: estado actual + plan parcial Bavaria),
    14 = Kennedy con propuesta (escenario C). Condiciones normales: población +0,5 %/año [SUP: crecimiento moderado, Kennedy ya es una localidad consolidada], carros +1,5 %/año, recolección 84 %; sin corte,
    sin cierre, sin pérdida de parche, sin aumento de orgánicos, sin presión inmobiliaria extra ni falta de recursos. Las reglas de game over siguen activas. */
@@ -1083,6 +1084,7 @@ function pruebaIni(E) {
   E.topeRef = E.s.Kc / (1 + V.SUP.HOLGURA) * (1 + (v.coraTope != null ? v.coraTope : 11) / 100);
   if (E.par === 3) E.org = { f: (v.orgAumento || 0) / 100, t0: Math.round(v.orgT0) };
   if (E.par === 4) { const k = Math.max(1, Math.min(4, Math.round(v.parche))) - 1, p = FRAG_P[k]; E.frag = { p, f: (v.parchePerdida || 0) / 100, t0: Math.round(v.parcheT0), arb0: E.PAR.P3.arboles };
+    E.espBase = Array.from({ length: RED.NFA }, (_, i) => { let n = 0; for (let q = 0; q < NP; q++) n += E.occ0[i * NP + q]; return n; }); E.espRachas = new Uint16Array(RED.NFA);
     const vec = HAB_P.filter(q => q !== p).map(q => [q, Math.hypot(PARCHES[q].x - PARCHES[p].x, PARCHES[q].z - PARCHES[p].z)]).sort((a, b) => a[1] - b[1]).slice(0, 3);
     E.frag.corr = vec.map(([q]) => q); }
   if (E.par === 6) E.gob = { rond: Math.max(1, Math.round(v.decisionCada || 13)), pres: (v.presupuesto || 50) / 100, need: new Float64Array(8), rez: new Float64Array(8), acum: new Float64Array(8), asig: new Float64Array(8),
@@ -1127,7 +1129,7 @@ function gobernanzaPaso(E, x) {
   else { const q = (1 - 0.3 * Math.min(1, E.PAR.P1.rotacion / 52)) * (s.prom >= 1 ? 1 : 0.7), pt = GOB_POB.reduce((a, v) => a + v, 0);
     for (let b = 0; b < 8; b++) w[b] = G.need[b] * (q + (1 - q) * ((b * 7 + G.rondas * 3) % 8) / 7); // reporte imperfecto: error determinista que rota con las rondas
     const sw = w.reduce((a, v) => a + v, 0) || 1; for (let b = 0; b < 8; b++) w[b] = Math.max(w[b] / sw, S.PISO * GOB_POB[b] / pt); }
-  if (E.prop && E.par === 6 && E.val.barrioPrioritario >= 0) w[Math.min(7, Math.round(E.val.barrioPrioritario))] *= S.PRIORIDAD;
+  if (E.par === 6 && E.val.barrioPrioritario >= 0) w[Math.min(7, Math.round(E.val.barrioPrioritario))] *= S.PRIORIDAD;
   const sw = w.reduce((a, v) => a + v, 0) || 1; let gin = 0, cm = 0, pw = 0;
   for (let b = 0; b < 8; b++) { const a = R * w[b] / sw; G.asig[b] = a; G.acum[b] += a; G.cov[b] = G.need[b] > 0 ? Math.min(1, a / G.need[b]) : 1; G.rez[b] = Math.max(0, G.need[b] - a) * S.ARRASTRE;
     while (G.acum[b] >= S.COSTO * (G.eqn[b] + 1)) { G.eqn[b]++; const Bb = GOB_BARRIOS[b], k = G.eqn[b], ang = k * 2.4;
@@ -1539,6 +1541,22 @@ export function paso(E) {
     }
     return {n:f.n,grupo:f.grupo,valor:lugares.length,lugares,alcanzables:W?destinos.size:null};
   });
+  if (E.par === 4) {
+    // Presencia = número de parches ocupados por especie. Referencia: semana previa al deterioro elegido.
+    // Si la prueba comienza en la semana 1, se usa la ocupación inicial de la red.
+    if (x.sem === E.frag.t0 - 1) { E.espBase = especies.map(p => p.valor); E.espRachas.fill(0); }
+    if (E.espBase) {
+      const comparadas = especies.map((p, i) => ({ n: p.n, actual: p.valor, inicial: E.espBase[i], porcentaje: E.espBase[i] ? 100 * p.valor / E.espBase[i] : null, x: p.lugares.length ? PARCHES[p.lugares[0]].x : null, z: p.lugares.length ? PARCHES[p.lugares[0]].z : null }));
+      const peor = comparadas.filter(p => p.porcentaje != null).sort((a, b) => a.porcentaje - b.porcentaje)[0];
+      x.presenciaEspecie = peor ? { ...peor, racha: E.espRachas[especies.findIndex(p => p.n === peor.n)] } : null;
+      for (let i = 0; i < comparadas.length; i++) {
+        const p = comparadas[i]; E.espRachas[i] = x.sem >= E.frag.t0 && p.porcentaje != null && p.porcentaje <= 70 ? E.espRachas[i] + 1 : 0;
+        if (!E.go && E.espRachas[i] >= 4) E.go = { regla: 'especie', enfoque: 'Ecocentrismo', sem: x.sem, inicio: x.sem - 3,
+          motivo: `la presencia de ${p.n} bajó ${Math.round(100 - p.porcentaje)} % frente a antes del deterioro durante cuatro semanas consecutivas`, lugar: p.n, x: p.x, z: p.z, valor: Math.round(p.porcentaje * 10) / 10 };
+      }
+      if (peor) x.presenciaEspecie.racha = E.espRachas[especies.findIndex(p => p.n === peor.n)];
+    }
+  }
   x.evaluacion.territorio={
     red:x.red,riqueza:x.biodiversidad.riqueza,conectados:ratio(x.verde.resumen.nConectados,x.verde.resumen.nParches),
     atropellos:x.atropellos.semana,verde:x.ciclos.suelo,
@@ -1588,6 +1606,7 @@ export function ind(E) {
   if (E.ruidoLAeq0 == null) E.ruidoLAeq0 = 10 * Math.log10((PRE.nC * Math.pow(10, PRE.eLc / 10) + PRE.nL * Math.pow(10, PRE.eLl / 10)) / n);
   const callesRuidosas = (sobre(PRE.Lc, 65 - dC) + sobre(PRE.Ll, 65 - dL)) / n * 100, callesOMS = (sobre(PRE.Lc, 53 - dC) + sobre(PRE.Ll, 53 - dL)) / n * 100;
   const congestion = TOMTOM.congestion * Math.pow(trafico, TOMTOM.beta), tiempo10km = TOMTOM.libre * (1 + congestion / 100);
+  const tiempoDesvio10km = E.par === 2 ? TOMTOM.libre * (1 + TOMTOM.congestion / 100 * Math.pow(trafico * (E.cie ? E.cie.traf : 1), TOMTOM.beta)) : null; // estimación BPR para 10 km en el corredor de desvío, no tiempo puerta a puerta
   // atropellos (índice [SUP], ver encabezado)
   let atrop = 0; const XQ = s.red.XQ;
   if (XQ) for (let i = 0; i < NFA; i++) { if (!RED.TER[i]) continue; const W = PRE.DEST[RED.FAUNA[i].grupo], b = i * NP;
@@ -1624,8 +1643,8 @@ export function ind(E) {
   const borde = BORDE_TOT > 0 ? cl01(o.cora.borde / BORDE_TOT) * (o.cora.mad || 0) : 0;
   const recuperacion = cl01(0.25 * Math.max(cl01((huertas - h0) / (3 * h0)), cl01(comidaLocal / 10)) + 0.15 * arb + 0.15 * borde + 0.15 * cl01((s.W - 0.55) / 0.45) + 0.3 * cl01((red / Math.max(1, refV(E, 'red', red)) - 1) / 0.5));
   return E.ind = { sem, año: sem / V.AÑO, fauna: c.esp, fauna0: c0.esp, flora: c.flora, flora0: c0.flora, red, red0: E.red0, redTipos: c.red, redTipos0: c0.red, pares: c.pares, pares0: c0.pares,
-    aves, poliniz, poliniz0: E.poli0, polinizEsp: poli, trafico, congestion, tiempo10km, ruidoDb, ruidoDb0: E.ruido0, ruidoLAeq, ruidoLAeq0: E.ruidoLAeq0, mitiga: E.traf.mit, callesRuidosas, callesOMS, atropellosIndice: atrop, atropellos: null, hechos: null, verde: null, muertes: null, avesRuido: null, ciclos: null, biodiversidad: null, comidaMin: o.zMin, residuos: o.pend / Math.max(1, o.alm),
-    huertas, bodegas: s.cora.ap.length, cierre: indCierre(E, o), zonas: { soporteEco, comercio, cora }, extinciones: E.ev, presion, recuperacion, predio, eventos: [],
+    aves, poliniz, poliniz0: E.poli0, polinizEsp: poli, trafico, congestion, tiempo10km, tiempoDesvio10km, ruidoDb, ruidoDb0: E.ruido0, ruidoLAeq, ruidoLAeq0: E.ruidoLAeq0, mitiga: E.traf.mit, callesRuidosas, callesOMS, atropellosIndice: atrop, atropellos: null, hechos: null, verde: null, muertes: null, avesRuido: null, ciclos: null, biodiversidad: null, comidaMin: o.zMin, residuos: o.pend / Math.max(1, o.alm),
+    huertas, bodegas: s.cora.ap.length, cierre: indCierre(E, o), poblacionKennedy: E.par === 5 ? Math.round(s.pob + (o.plan ? o.plan.personas : 0)) : null, zonas: { soporteEco, comercio, cora }, extinciones: E.ev, presion, recuperacion, predio, eventos: [],
     ref: E.ref.listo ? { pares: E.ref.pares, red: E.ref.red, poliniz: E.ref.poli, semanas: REF } : null,
     basura: { total_t_dia: Bs.total, puntos: Bs.pts.map(P => ({ x: Math.round(P.x), z: Math.round(P.z), t_dia: P.t, fuente: P.fuente, acumulada: P.acum, acumulada0: P.acum0, sinRecoger_t_dia: P.u, nombre: P.nombre || null })), captura: Bs.captura, fraccionSinRecoger: (() => { let u = 0, g = 0; for (const P of Bs.pts) if (P.fuente !== 'humedal') { u += P.u; g += P.t; } return g > 0 ? u / g : 0; })(), acumulada: Bs.acum, acumulada0: Bs.acum0, sinRecoger_t_dia: Bs.pts.reduce((a, P) => a + P.u, 0) },
     ratas: Bs.ratas, ratas0: 1, humedalHa, humedalHa0: Bs.ha0Tot, humedalFuncional, humedales: HUM_P.map((h, k) => ({ id: PARCHES[h].id, nombre: PARCHES[h].n, x: PARCHES[h].x, z: PARCHES[h].z, ha: Bs.ha[k], ha0: Bs.ha0[k], calidad: Bs.cal[k] })),

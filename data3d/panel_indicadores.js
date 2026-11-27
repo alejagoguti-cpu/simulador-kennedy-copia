@@ -15,6 +15,7 @@ import { esc, num, año, tip, Tendencia } from './graficas_vivas.js?v=4';
 import { ARTE, llave, contar, ponerTip } from './graficas_arte.js?v=3';
 import { crearFichas } from './fichas_obras.js?v=2';
 import { T, IND, INDK, MACROS, CLAVE, valor, clavePct, claveArea, acceso, ACCESO_SUP, ACCESO_R, hayEstaciones, SEM_REF } from './indicadores_macro.js?v=2';
+import { FUENTES_PARES } from './sim_fuentes.js';
 
 const PASO = 2; // series de 15 años muestreadas cada 2 semanas
 const ICO_FX = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M8.6 4.2c-1.4 0-2 .9-2.3 2.4L5 15.1c-.3 1.4-.9 2-2 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.2 8.4h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m11.4 9 5 6.4M16.4 9l-5 6.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
@@ -194,6 +195,10 @@ const CSS = `
 .pi-fx{all:unset;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px 0 6px;border-radius:99px;border:1px solid rgba(255,255,255,.12);font:500 10px/1 var(--ui-sans,'Inter',sans-serif);color:var(--ui-tx3,#a5ae9f);cursor:pointer;white-space:nowrap}
 .pi-fx:hover,.pi-fx[aria-expanded=true]{color:var(--pi-ink);border-color:rgba(169,156,255,.7);background:rgba(125,107,255,.14)}
 .pi-fx:focus-visible{outline:1px solid var(--pi-v2);outline-offset:2px}
+.pi-card.pi-consultable .pi-ch h3,.pi-card.pi-consultable .pi-val{cursor:pointer}
+.pi-card.pi-consultable .pi-ch h3:hover,.pi-card.pi-consultable .pi-val:hover{color:var(--pi-v2)}
+.pi-card.pi-consultable :is(.pi-ch h3,.pi-val):focus-visible{outline:1px solid var(--pi-v2);outline-offset:3px;border-radius:3px}
+.pi-form a{color:var(--pi-v3);text-decoration:underline;text-underline-offset:2px}
 @container (max-width:260px){.pi-fx span{display:none}}
 .pi-q{margin:3px 0 0;font:400 11px/1.35 var(--ui-sans,'Inter',sans-serif);color:var(--ui-tx2,#c9cfc4)}
 .pi-e{margin:6px 0 0;font-size:10.5px;line-height:1.45;color:var(--ui-tx3,#a5ae9f)}
@@ -394,7 +399,12 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
     sec.appendChild(a);
     if (k === 'inter') a.classList.add('pi-hero');
     const C = { k, el: a, vis: false, abierta: false, up: viz ? viz(a.querySelector('.pi-viz'), a) : null };
-    a.querySelector('.pi-fx').addEventListener('click', (e) => { C.abierta = !C.abierta; e.currentTarget.setAttribute('aria-expanded', C.abierta); a.querySelector('.pi-form').hidden = !C.abierta; a.querySelector('.pi-e').hidden = !C.abierta; /* 2026-11-26: menos texto, la explicación va con la fórmula */ if (C.abierta && R.hist.length) { try { formula(C, ctxDe()); } catch (er) { console.warn('tablero:', er); } } });
+    const alternarFormula = () => { C.abierta = !C.abierta; a.querySelector('.pi-fx').setAttribute('aria-expanded', C.abierta); a.querySelector('.pi-form').hidden = !C.abierta; a.querySelector('.pi-e').hidden = !C.abierta; if (C.abierta && R.hist.length) { try { formula(C, ctxDe()); } catch (er) { console.warn('tablero:', er); } } };
+    a.querySelector('.pi-fx').addEventListener('click', alternarFormula);
+    for (const el of [a.querySelector('.pi-ch h3'), a.querySelector('.pi-val')]) {
+      el.addEventListener('click', () => { if (R.def && R.def.par >= 2 && R.def.par <= 6) alternarFormula(); });
+      el.addEventListener('keydown', (e) => { if (R.def && R.def.par >= 2 && R.def.par <= 6 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); alternarFormula(); } });
+    }
     cards.set(k, C); if (io) io.observe(a); return C;
   }
   /* dirección del cambio: palabra + flecha + color (nunca color solo) y si eso es bueno o malo para ESTE indicador */
@@ -410,6 +420,9 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
   const neutro = (t, dd) => `<span class="pi-chip">${tri(0)}${t}</span><span class="pi-dd">${dd}</span>`;
   function cabecera(C, c) {
     const d = INDK[C.k], v = valor(C.k, c.I, c.CA), v1 = c.n > SEM_REF ? valor(C.k, c.I1, c.CA) : null, vo = c.Bk ? valor(C.k, c.Bk, c.CB) : null, el = C.el;
+    const consultable = R.def && R.def.par >= 2 && R.def.par <= 6;
+    el.classList.toggle('pi-consultable', !!consultable);
+    for (const control of [el.querySelector('.pi-ch h3'), el.querySelector('.pi-val')]) { control.tabIndex = consultable ? 0 : -1; if (consultable) { control.setAttribute('role', 'button'); control.setAttribute('aria-label', `Ver fórmula y fuentes de ${d.n}`); } else { control.removeAttribute('role'); control.removeAttribute('aria-label'); } }
     const f = (x) => (x == null ? '—' : (d.k === 'presion' && x > 0 ? '+' : '') + num(x, d.d) + uVal(d));
     contar(el.querySelector('.v'), v, (x) => (d.k === 'presion' && x > 0 ? '+' : '') + num(x, d.d));
     /* 1 · dirección desde el año 1 (esta corrida) */
@@ -436,7 +449,8 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
     const filas = vivos(C.k, c);
     const html = f.f + `<h4>Términos</h4><dl>${f.t.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join('')}</dl>`
       + `<h4>Valores de esta semana · semana ${c.I.sem}</h4><table><thead><tr><th></th><th>${c.prop ? 'Con (esta)' : 'Sin (esta)'}</th><th>${c.prop ? 'Sin' : 'Con'}</th></tr></thead><tbody>${filas.map((r) => `<tr><td>${esc(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`
-      + `<h4>Cómo se calcula en el simulador</h4><p>${esc(f.como)}</p><h4>Qué hace la propuesta</h4><p>${esc(PROPM[C.k] || '')}</p><h4>Fuente</h4><p>${esc(f.fuente)}</p>`;
+      + `<h4>Cómo se calcula en el simulador</h4><p>${esc(f.como)}</p><h4>Qué hace la propuesta</h4><p>${esc(PROPM[C.k] || '')}</p><h4>Fuente del método</h4><p>${esc(f.fuente)}</p>`
+      + ((R.def && R.def.par >= 2 && R.def.par <= 6) ? `<h4>Datos de partida y alcance · simulación ${String(R.def.par).padStart(2, '0')}</h4><ul>${(FUENTES_PARES[R.def.par] || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.n)}: ${esc(s.v)}</a> · ${esc(s.alcance)}</li>`).join('')}</ul><p>La cifra de esta tarjeta sale de las variables de la semana y de la fórmula anterior. Los controles de la prueba y los umbrales sin medición son supuestos.</p><p><a href="https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/docs/calibracion_02_06.md" target="_blank" rel="noopener noreferrer">Ver trazabilidad completa</a> · <a href="https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/data3d/indicadores_macro.js" target="_blank" rel="noopener noreferrer">Cálculo de índices</a> · <a href="https://github.com/alejagoguti-cpu/simulador-kennedy-copia/blob/main/data3d/simulaciones12.js" target="_blank" rel="noopener noreferrer">Modelo semanal</a></p>` : '');
     if (box._h !== html) { box._h = html; box.innerHTML = html; }
   }
   function vivos(k, c) {
@@ -656,4 +670,5 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
   window.KEN_PI = api;
   return api;
 }
+
 

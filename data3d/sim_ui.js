@@ -10,7 +10,7 @@ import { crearPanelEvaluacion, CSS_EVALUACION } from './panel_evaluacion.js?v=6'
 import { RELOJ } from './reloj.js?v=5';
 import { florEco, datoEco, cintaEco, ESTILO_ECO } from './diagramas_eco.js?v=2';
 import * as AB01P from './ab01_panel.js?v=10'; /* simulación 01: alerta, diagrama demanda/llega/límite y capas (2026-11-26) */
-import * as SP from './sim_panel.js?v=4'; /* simulaciones 02–06: el mismo formato que la 01 (docs/todas_las_simulaciones.md, 2026-11-26) */
+import * as SP from './sim_panel.js?v=5'; /* simulaciones 02–06: el mismo formato que la 01 (docs/todas_las_simulaciones.md, 2026-11-26) */
 
 /* SIN_CAPAS: el mapa queda limpio (solo carros y fauna); los datos van en el tablero. La autora: «quítale todas esas capas y redes verdes» */
 const SIN_CAPAS = true;
@@ -42,7 +42,7 @@ const derivar = (I) => { if (I.circular) I.circularIdx = I.circular.indice; if (
 
 export async function iniciarSimUI({ T3, SIMS_UI }) {
   let M = null; // módulo del modelo
-  try { M = await import('./simulaciones12.js?v=44'); if (M.cargarDatos) await M.cargarDatos(); }
+  try { M = await import('./simulaciones12.js?v=45'); if (M.cargarDatos) await M.cargarDatos(); }
   catch (e) { console.warn('simulaciones (modelo):', e); M = null; }
   if (M && M.SEMANAS_FIN) FIN = Math.min(780, M.SEMANAS_FIN); /* el simulador corre 15 años */
 
@@ -225,6 +225,11 @@ export async function iniciarSimUI({ T3, SIMS_UI }) {
       /* sin ruido automático */
       }, 700); // la capa de comercio (CCL) se prende a mano en «Indicadores»
     R.base = null; if (M) setTimeout(calcularBase, 300); // la otra mitad del par (sin propuesta), con los mismos valores, para comparar
+  }
+  function aplicarVariables(valores) {
+    if (!R.def || !M) return;
+    for (const s of R.def.sliders || []) if (Object.hasOwn(valores, s.k) && Number.isFinite(+valores[s.k])) R.valores[s.k] = +valores[s.k];
+    reiniciarModelo(); pintarPanel(); calcularBase();
   }
   function reiniciarModelo() {
     R.hist = []; R.cora0 = null; R.go = null; R.fin = false; R.previa = false; R.extinciones = []; R.eventos = []; if (typeof graf !== 'undefined' && graf) graf.classList.remove('on'); go.classList.remove('on'); cerrarInforme(); if (typeof tab !== 'undefined') tab.innerHTML = ''; if (typeof cerrarFicha === 'function') try { cerrarFicha(); } catch (e) { /* */ } limpiarAvisos(); if (window.KEN_HECHOS) window.KEN_HECHOS.limpiar(); if (window.KEN_VERDE) { window.KEN_VERDE.limpiar(); window.KEN_VERDE.ver(false); } ponerPredio(null); ponerBasura(null); ponerCierre(null); ponerDegrada(null); ponerCaminos(null); ponerCapaPar(null); window.KEN_TRAF_F = 1; if (window.KEN_FOCO) window.KEN_FOCO.off(); // el blanco y negro de un game over no queda puesto en la siguiente
@@ -825,7 +830,7 @@ export async function iniciarSimUI({ T3, SIMS_UI }) {
   document.head.append(styleSeguimiento);
   const panelEvaluacion = crearPanelEvaluacion({ T3 });
   /* el tablero estadístico en tiempo real vive en la columna derecha, aside#lp-tablero (panel_datos.js + graficas_vivas.js) */
-  import('./panel_indicadores.js?v=14').then(m => m.iniciarPanelIndicadores({ R, getM: () => M, getFIN: () => FIN })).catch(e => console.warn('panel de indicadores:', e)); /* reemplaza a panel_datos.js (tablero viejo por sistemas) */
+  import('./panel_indicadores.js?v=15').then(m => m.iniciarPanelIndicadores({ R, getM: () => M, getFIN: () => FIN })).catch(e => console.warn('panel de indicadores:', e)); /* reemplaza a panel_datos.js (tablero viejo por sistemas) */
   /* gráfica de cada indicador (como las de antes): área bajo la curva de esta corrida, la «sin propuesta» punteada, líneas de los años
      5 y 10, punto blanco en el valor de ahora; eje x = los 15 años */
   function chispaT(a, b, col) { const W = 268, H = 64, n = Math.ceil(FIN / 4), all = a.concat(b).filter(v => v != null); if (!all.length) return '';
@@ -1045,7 +1050,7 @@ export async function iniciarSimUI({ T3, SIMS_UI }) {
     return `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none">${ejes}${vb ? `<polyline points="${linea(vb)}" fill="none" stroke="rgba(255,255,255,.45)" stroke-dasharray="4 3" stroke-width="1.4" vector-effect="non-scaling-stroke"/>` : ''}<polyline points="${linea(v)}" fill="none" stroke="#ffcf7a" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
   }
 
-  return { preparar, reiniciarModelo, abrirInforme, avisar, get disponible() { return !!M; }, get R() { return R; } };
+  return { preparar, aplicarVariables, reiniciarModelo, abrirInforme, avisar, get disponible() { return !!M; }, get R() { return R; } };
 }
 
 

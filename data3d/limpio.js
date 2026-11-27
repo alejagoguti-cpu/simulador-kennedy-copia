@@ -10,7 +10,8 @@
    [SUP] METRO_MENOS_CARROS = 0,10: no hay cifra oficial de cuánto tráfico quita la Línea 1. */
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
-import { iniciarSimUI } from './sim_ui.js?v=141';
+import { iniciarSimUI } from './sim_ui.js?v=142';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=1';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -381,6 +382,7 @@ export function iniciarLimpio({ T3 }) {
   let yaOblicua = false;
   function alternar() {
     if (!ESC.activo) return;
+    if (!preparado) return;
     /* la cámara no se mueve sola: la vista oblicua ya está puesta desde el inicio (VISTA) */
     if (RELOJ.pausaSem) { if (RELOJ.sem >= FIN_SEM) reiniciar(); RELOJ.detenerSemEn = FIN_SEM; RELOJ.ponerVelAños(VELS[vel]); RELOJ.pausarAños(false); RELOJ.presupuestoMs = 10; RELOJ.ponerVel(VEL_DIA[vel]); }
     else { RELOJ.pausarAños(true); RELOJ.presupuestoMs = 6; RELOJ.ponerVel(1); }
@@ -399,7 +401,15 @@ export function iniciarLimpio({ T3 }) {
 
   /* ---------- escoger simulación: prepara el territorio y espera PLAY ---------- */
   const ESC = window.KEN_LIMPIO = { activo: 0, sim: null, factorCarros: () => factorCarros(), SIMS };
-  let UI = null; iniciarSimUI({ T3, SIMS_UI: SIMS }).then(u => { UI = window.KEN_SIMUI = u; if (ESC.activo) u.preparar(ESC.activo); }).catch(e => console.warn('interfaz de simulaciones:', e));
+  let UI = null, preparado = true;
+  const valoresPar = new Map();
+  const recorrido = crearRecorridoArquitectura({ T3, alComenzar: (def, valores) => {
+    if (!UI || ESC.activo !== def.id) return;
+    valoresPar.set(def.par, { ...(valoresPar.get(def.par) || {}), ...valores });
+    UI.aplicarVariables(valores); preparado = true; $b('.play').disabled = false; alternar();
+  } });
+  function abrirRecorrido(id) { if (!UI || ESC.activo !== id) return; const d = UI.R.def; if (d && d.par >= 2 && d.par <= 6) recorrido.abrir(d, valoresPar.get(d.par)); }
+  iniciarSimUI({ T3, SIMS_UI: SIMS }).then(u => { UI = window.KEN_SIMUI = u; if (ESC.activo) { u.preparar(ESC.activo); if (!preparado) setTimeout(() => abrirRecorrido(ESC.activo), 100); } }).catch(e => console.warn('interfaz de simulaciones:', e));
   function factorCarros() { // multiplica la demanda de tráfico que se dibuja (index.html, updateTraffic)
     if (window.KEN_TRAF_F) return window.KEN_TRAF_F; // más carros (los mismos de la simulación SUMO) cuando el modelo dice que hay más tráfico
     return 1; // el metro está en todas las simulaciones: su efecto lo lleva el modelo semanal
@@ -409,6 +419,7 @@ export function iniciarLimpio({ T3 }) {
   }
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo;
+    recorrido.cerrar(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
@@ -417,7 +428,7 @@ export function iniciarLimpio({ T3 }) {
     const btn = document.querySelector(`#esim .seg button[data-e="${S.base}"]`); if (btn) btn.click();
     if (window.KEN_PLANBAV) window.KEN_PLANBAV.ver(S.base === 'D');
     // queda en el año 1, en pausa: corre al darle play
-    setTimeout(() => { if (seguir) { if (UI) UI.preparar(id, { desde: Math.min(FIN_SEM, RELOJ.sem) }); } else { reiniciar(); if (UI) UI.preparar(id); } }, 60);
+    setTimeout(() => { if (seguir) { if (UI) UI.preparar(id, { desde: Math.min(FIN_SEM, RELOJ.sem) }); } else { reiniciar(); if (UI) UI.preparar(id); } if (!preparado) setTimeout(() => abrirRecorrido(id), 120); }, 60);
     // rutas y vehículos de reparto de «Viajes de abastecimiento» (panel escondido): apagados, tiñen el mapa de naranja y pesan
     for (const ms of [400, 1500, 3500]) setTimeout(() => { const vm = document.getElementById('vm-panel'); if (vm) vm.querySelectorAll('button').forEach(b => { if (/^Apagar$/.test(b.textContent.trim()) && !b.classList.contains('on')) b.click(); }); }, ms);
     // la cámara NO se mueve al escoger una simulación: el panel escondido A·B·C·D pide su «vista general» 250 ms después del clic; se cancela

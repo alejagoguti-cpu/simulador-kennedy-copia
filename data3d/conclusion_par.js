@@ -3,7 +3,7 @@
    VEREDICTO BINARIO (docs/todas_las_simulaciones.md): No sostenible = game over (cualquier regla del modelo, 4 semanas seguidas);
    Sostenible = 15 años sin game over. PLANTILLA FIJA: 1 qué se cambió → 2 qué pasó → 3 si aguantó → 4 cuándo y dónde falló → 5 conclusión.
    Todo sale de la corrida (H) y de la otra mitad del par (B); los límites son LIM y PAR_LIM de data3d/sim_panel.js. */
-import { LIM, PAR_LIM, PAR_CFG, malo, nf } from './sim_panel.js?v=4';
+import { LIM, PAR_LIM, PAR_CFG, malo, nf } from './sim_panel.js?v=5';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const añoDe = (sem) => Math.min(15, Math.floor((Math.max(1, sem) - 1) / 52) + 1);
 const val = (f, h) => { try { const v = f(h); return v != null && isFinite(v) ? v : null; } catch (e) { return null; } };
