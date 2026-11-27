@@ -3820,7 +3820,7 @@ if (KEN) { // simulación de Kennedy (data3d/giro_sim.js) dentro de la maqueta
       T3.planBavaria = PLAN; T3.planCorabastos = CPLAN; T3.EST = EST;
       // selector ESTADO ACTUAL / CON LA PROPUESTA (data3d/escenario.js): arranca en hoy; la propuesta prende huertas, Bavaria Común,
       // Corabastos reducido, sintaxis con los pasajes, camiones -> furgonetas (ruido) y la fauna de las huertas
-      import('./data3d/escenario.js?v=125').then(me2 => me2.iniciarEscenario({ T3, say })).catch(e => console.warn('escenario:', e));
+      import('./data3d/escenario.js?v=126').then(me2 => me2.iniciarEscenario({ T3, say })).catch(e => console.warn('escenario:', e));
       if (document.documentElement.classList.contains('limpio')) import('./data3d/limpio.js?v=178').then(m => m.iniciarLimpio({ T3 })).catch(e => console.warn('vista limpia:', e));
       ['picos_indicadores.js?v=3', 'foco.js?v=10', 'ojo_dios.js?v=7'].forEach(f => import('./data3d/' + f).catch(e => console.warn(f, e))); /* módulos visuales para la vista limpia: window.KEN_PICOS_IND, KEN_FOCO, KEN_OJO */
       const lista = EST ? EST.lista.slice() : []; if (PLAN) lista.unshift(PLAN.entrada);
