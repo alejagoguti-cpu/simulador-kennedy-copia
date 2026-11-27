@@ -27,7 +27,7 @@
 
    NUEVO (2026-11-23):
    · congestion (%) y tiempo10km (min): CALIBRADOS CON EL TOMTOM TRAFFIC INDEX (ver TOMTOM abajo). congestion = tiempo extra de viaje frente a flujo libre,
-     como lo define TomTom. Semana 0 = la cifra publicada de Bogotá (2025: 69,9 %, 31 min 45 s por 10 km). Crece con la curva BPR:
+     como lo define TomTom. Semana 0 = la cifra publicada de Bogotá (2025: 69,6 %, 31 min 45 s por 10 km). Crece con la curva BPR:
      congestion = C₀·trafico⁴ (Bureau of Public Roads 1964, exponente 4, el estándar de asignación de tráfico).
    · predio: el predio del Plan Parcial Fábrica Bavaria (sim. 4) o el instituto en Bavaria (sims. 2, 9, 10, 11); null en las demás. Ver PREDIO abajo.
    · eventos: avisos NUEVOS de la semana para la interfaz (casi siempre vacío). Ver AVISOS abajo.
@@ -169,7 +169,7 @@ const fZonaP = (d, r, D) => cl01((D - (d - r)) / (2 * r));
    · crecimiento: 2,7 %/año (UAESP: +5,5 % en el relleno Doña Juana entre 2024 y 2026). Deslizador basuraCrece.
    SIN RECOGER: 1 − recolección; 84 % es una hipótesis del modelo. Las 1.089 t/día en puntos críticos también fueron recogidas,
    por lo que no permiten estimar la fracción no recolectada. No hay una medición local comparable para este parámetro.
-     En B y C la fracción orgánica que separa la red (sep / gen de sim_vida.js × 55 % orgánico [SUP, caracterización típica de Bogotá]) ya no queda en la calle.
+     En B y C la fracción orgánica que separa la red (sep / gen de sim_vida.js × 51,32 % orgánico, proxy UAESP 2017 para Bogotá) ya no queda en la calle.
    ACUMULADA (t): cada punto acumula lo que no se recoge y la limpieza de puntos críticos retira LIMPIEZA = 1/8 por semana [SUP: un punto crítico dura
      unas 5–6 semanas]. Arranca en equilibrio con la generación de hoy (acumulada0).
    EFECTOS (salen del modelo, parámetros [SUP]):
@@ -318,7 +318,7 @@ const sDur = { k: 'cierreDur', n: 'Duración del cierre', min: 1, max: 520, paso
 /* · trafCrece: crecimiento anual de los carros (V = 0,70·carros + 0,22·motos + 0,08·camiones, sim_vida.js). Por defecto 1,5 %/año (Registro Distrital Automotor).
    · pobCrece: crecimiento anual de la población (más comida, más orgánicos y [SUP] más carros en la misma proporción).
    · mitiga: % de calles pacificadas y con barreras verdes: [SUP] −3 dB en ellas (EEA 2010, https://www.eea.europa.eu/publications/eea_technical_report_2010_11). */
-const sTraf = { k: 'trafCrece', n: 'Crecimiento anual del tráfico', min: 0, max: 3, paso: 0.1, val: 1.5, unidad: '%/año', ayuda: 'Carros nuevos cada año. 1,5 % = el parque automotor de Bogotá 2020–2024; la congestión parte de la medida de 2025 (69,9 %).' };
+const sTraf = { k: 'trafCrece', n: 'Crecimiento anual del tráfico', min: 0, max: 3, paso: 0.1, val: 1.5, unidad: '%/año', ayuda: 'Carros nuevos cada año. 1,5 % = el parque automotor de Bogotá 2020–2024; la congestión parte de la medida de 2025 (69,6 %).' };
 const sPob = (val = 0) => ({ k: 'pobCrece', n: 'Crecimiento de la población', min: -1, max: 3, paso: 0.1, val, unidad: '%/año', ayuda: 'Expansión y densificación de Kennedy: más comida necesaria, más orgánicos y más carros.' });
 const sRuido = { k: 'mitiga', n: 'Calles pacificadas y con barreras verdes', min: 0, max: 100, paso: 5, val: 0, unidad: '%', ayuda: 'Calles a 30 km/h y con franjas verdes: unos 3 dB menos en ellas; menos ruido para las aves.' };
 const sRecol = { k: 'recoleccion', n: 'Recolección de la basura', min: 50, max: 100, paso: 1, val: 84, unidad: '%', ayuda: '84 % es un supuesto de sensibilidad: no hay una tasa local de basura sin recoger. UAESP reporta también como RECOGIDOS los residuos de puntos críticos; no son el 16 % sin recoger.' };

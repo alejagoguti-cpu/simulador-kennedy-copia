@@ -3,7 +3,7 @@
    de apertura proceden de MERCADOS; las cantidades salen de simulaciones12. */
 import { RELOJ } from './reloj.js?v=5';
 import { crearGris } from './gris.js?v=1';
-import { SIMS } from './simulaciones12.js?v=43';
+import { SIMS } from './simulaciones12.js?v=44';
 import { MERCADOS } from './sim_red_datos.js?v=2';
 
 let actual = null;
@@ -184,3 +184,4 @@ export function cerrarRecorridoResiduos() {
   s.root.remove();document.documentElement.classList.remove('rr-on');
 }
 export const abierto=()=>!!actual;
+

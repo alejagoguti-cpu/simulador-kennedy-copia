@@ -1,4 +1,4 @@
-import * as S from './simulaciones12.js?v=43';
+import * as S from './simulaciones12.js?v=44';
 
 const listo = S.cargarDatos(url => fetch(url).then(r => {
   if (!r.ok) throw new Error(`Datos de residuos: HTTP ${r.status}`);
@@ -24,3 +24,4 @@ onmessage = async ({ data }) => {
     if (token === ultimo) postMessage({ id:data.id, serie });
   } catch (error) { if (token === ultimo) postMessage({ id:data.id, error:String(error.message || error) }); }
 };
+

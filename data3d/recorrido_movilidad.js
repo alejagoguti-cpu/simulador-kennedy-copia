@@ -1,4 +1,4 @@
-﻿/* ============ RECORRIDO DE LA SIMULACIÓN 02 · MOVILIDAD (tres vistas) ============
+/* ============ RECORRIDO DE LA SIMULACIÓN 02 · MOVILIDAD (tres vistas) ============
    abrirRecorrido({ con }) / cerrarRecorrido(). Lo abre data3d/limpio.js al escoger «02 Movilidad».
    VISTA 1 · TERRITORIO: la cámara encuadra el área de la prueba; el contexto queda en gris (KEN_FOCO) y solo destellan, en el color del
      escenario, los lugares que sostienen los datos: la Av. de las Américas (vía que se cierra, OpenStreetMap), la Av. Primero de Mayo (la
@@ -27,7 +27,7 @@ const movil = () => innerWidth < 760;
 async function preparar() {
   T3 = window.KEN_T3; if (!T3 || !T3.camera || !T3.net) throw new Error('la maqueta aún no está lista');
   THREE = T3.THREE;
-  if (!M) { M = await import('./simulaciones12.js?v=43'); if (M.cargarDatos) await M.cargarDatos(); }
+  if (!M) { M = await import('./simulaciones12.js?v=44'); if (M.cargarDatos) await M.cargarDatos(); }
   if (!VIAS || !CIE) { const m = await import('./cierre_gradual.js?v=7'); VIAS = m.VIAS; CIE = window.KEN_CIERRE || m.crearCierre({ T3, RELOJ }); }
   if (!PARCHES) PARCHES = (await import('./sim_red_datos.js?v=2')).PARCHES;
   if (!GR) GR = window.KEN_REC_GRIS || (window.KEN_REC_GRIS = (await import('./gris.js?v=1')).crearGris({ T3, excluir: EXC }));
@@ -629,3 +629,4 @@ export function cerrarRecorrido() {
 }
 export const abierto = () => !!st;
 addEventListener('resize', () => { if (st) aplicarOffset(); });
+

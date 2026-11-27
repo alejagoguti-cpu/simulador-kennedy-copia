@@ -1,5 +1,7 @@
 # Todas las simulaciones como la 01 + propuesta común (pedido de la autora, 2026-11-26)
 
+Calibración, fuentes y alcance de los datos de los pares 02–06: [calibracion_02_06.md](calibracion_02_06.md).
+
 ## Las 6 simulaciones con el mismo formato que 01 Abastecimiento
 - En todas pasa la MISMA propuesta: «Kennedy con propuesta» se ve igual en las 6; lo que cambia son las variables de estrés de cada una.
   - 01 Abastecimiento: aumenta la población / demanda alimentaria (ya hecha).
@@ -30,7 +32,7 @@ En el 3D la propuesta es la misma en las 6. En el **modelo** no del todo: todas 
 | Sim | Variables de estrés (deslizadores) | En vivo | Límites del panel | Fórmulas y fuentes / supuestos |
 |---|---|---|---|---|
 | 02 Movilidad | semana del cierre 104, duración 26 sem, desvío a la Primero de Mayo 50 % [SUP], tráfico 1,5 %/año, calles pacificadas, acopio | tráfico en la Primero de Mayo, bienestar de las aves, animales muertos por semana | comida en el sector peor < 80 %, ruido +3 dB, tráfico 130 %, especies < 90 % | tráfico desviado = 1 + desvío × fase (× 2/3 con propuesta [SUP]); ruido extra = 10·log10(tráfico desviado); bienestar = Σ aves·B(L)/Σ aves, B = 1 hasta 50 dB y 0 en 75 dB (Shannon et al. 2016; 75 dB [SUP]); comida por sector de sim_vida.js (rutas por la vía cerrada se alargan) |
-| 03 Residuos | aumento de orgánicos 30 % [SUP], semana 52, capacidad de Estación 6.000 kg/sem, hogares que separan 0,4, recolección 84 % (UAESP 2026) | orgánicos por persona, orgánicos generados, basura sin recoger | orgánicos en las Estaciones > 100 %, humedales < 70 %, especies < 90 % | orgánicos × (1 + aumento × rampa de un año); saturación = pendientes ÷ almacenamiento; humedal funcional = área × calidad frente a la basura del borde (Ramsar, Decreto 624/2007; 30 % [SUP]) |
+| 03 Residuos | aumento de orgánicos 30 % [SUP], semana 52, capacidad de Estación 6.000 kg/sem, hogares que separan 0,4, recolección 84 % [SUP] | orgánicos por persona, orgánicos generados, basura sin recoger | orgánicos en las Estaciones > 100 %, humedales < 70 %, especies < 90 % | orgánicos × (1 + aumento × rampa de un año); saturación = pendientes ÷ almacenamiento; humedal funcional = área × calidad frente a la basura del borde (Ramsar, Decreto 624/2007; 30 % [SUP]) |
 | 04 Biodiversidad | parche (El Burro), 50 % perdido, semana 104, árboles en parques 0,4, recuperación del humedal 0,02 | especies, parches conectados, territorio con fauna | especies < 90 % (Steffen et al. 2015 [SUP en 23 especies]), territorio con fauna ≤ 70 %, humedales < 70 % | calidad del parche = √(área que queda); con propuesta + 0,2 de árboles en 5 años [SUP] |
 | 05 Población y especulación | presión extra 3 %/año [SUP], población 1 %/año, protección 50 % (solo con), tráfico 1,5 %/año | precio del suelo, hogares en riesgo, tráfico | tráfico 130 % (Plan de Movilidad 2023), humedales < 70 %, ruido +3 dB | índice = 1 + (13 % metro + 25 % plan + extra × años) × (1 − 0,5·protección) [SUP]; hogares en riesgo × 55,1 % en arriendo (EM 2025) |
 | 06 Gobernanza | recursos 50 % [SUP], rondas cada 13 sem, rotación 12 sem, población 0 %, promotores 12 | necesidad cubierta, equidad, equipamientos | humedales < 70 %, comida en el sector peor < 80 %, territorio con fauna ≤ 70 % | reparto central (mitad población, mitad necesidad de hace 26 sem) o asambleas (necesidad actual, piso 40 %) [SUP]; equidad = 1 − Gini |
@@ -70,3 +72,4 @@ Queja de la autora: «no puede haber game over sin haber visto la vía cerrada»
 Las pareja 01, 03–06 sin cambios (01 residuosK@285, 03 humedal@677, 04 humedal@680, 05 humedal@588 y con tráfico@739, 06 humedal@680).
 
 **Contradicción que pide decisión de la autora**: con la obra gradual la comida baja poco (la logística compensa el desvío en ~6 semanas), así que el cierre **ya no provoca game over**. El «No sostenible» de 02 sin propuesta viene de los humedales en el año 14, que es el mismo resultado sin prueba de estrés. Para que el cierre sí decida habría que darle al modelo una pérdida de capacidad de abasto que dure mientras la vía esté cerrada (p. ej. la ruta larga no se compensa del todo) con una fuente; no se inventó.
+

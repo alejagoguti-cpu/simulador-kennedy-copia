@@ -44,7 +44,7 @@ const ICO = {
 };
 
 let M = null;
-const cargar = () => M ? Promise.resolve(M) : import('./simulaciones12.js?v=43').then(m => (M = m));
+const cargar = () => M ? Promise.resolve(M) : import('./simulaciones12.js?v=44').then(m => (M = m));
 /* par 01: diapositivas «Datos» y «Fuentes» con las cifras del dossier (docs/fuentes_abastecimiento.md; simulaciones12.js AB01 y AB01_FUENTES) */
 function slides01() {
   const A = M.AB01, F = M.AB01_FUENTES || []; if (!A) return [];
@@ -176,3 +176,4 @@ export function crearSlides({ alCorrer } = {}) {
   addEventListener('resize', () => { const tr = $('.sl-track'); if (tr && !box.hidden) tr.scrollLeft = actual * tr.clientWidth; });
   return { abrir, cerrar, get abierto() { return !box.hidden; } };
 }
+

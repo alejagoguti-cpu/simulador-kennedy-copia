@@ -1,4 +1,4 @@
-﻿/* Recorrido E8: contexto en gris, cubiertas catastrales en verde y acercamiento
+/* Recorrido E8: contexto en gris, cubiertas catastrales en verde y acercamiento
    a la construcción de 15 pisos verificada más próxima a Corabastos. */
 export function crearFocoCubiertas({ THREE, T3, techos, hidro }) {
   const canvas3d = T3.renderer.domElement;
@@ -189,7 +189,7 @@ body:has(#cubiertas-foco[data-phase="variables"]) #hid-red{display:none!importan
     if (variablesListas) { recalcular(); return; }
     variablesListas = true;
     try {
-      const sim = await import('./simulaciones12.js?v=43');
+      const sim = await import('./simulaciones12.js?v=44');
       const controles = panel.querySelector('#cf-controles');
       const sliders = sim.SIMS.find(s => s.id === 2).sliders;
       controles.innerHTML = sliders.map(s => `<label class="cf-slider"><span>${s.n}<output data-v="${s.k}">${s.val} ${s.unidad}</output></span><input type="range" data-k="${s.k}" min="${s.min}" max="${s.max}" step="${s.paso}" value="${s.val}" aria-label="${s.n}" title="${s.ayuda}"></label>`).join('') + '<label class="cf-slider"><span>Año de lectura<output data-v="anio">0</output></span><input type="range" data-k="anio" min="0" max="10" step="0.001" value="0" aria-label="Año de lectura"></label>';
@@ -284,3 +284,4 @@ body:has(#cubiertas-foco[data-phase="variables"]) #hid-red{display:none!importan
     else { pausar(); cancelAnimationFrame(frame); overlay.style.display='none'; canvas3d.style.filter=filtroAnterior; destacarTorres(false); }
   }, elegido };
 }
+
