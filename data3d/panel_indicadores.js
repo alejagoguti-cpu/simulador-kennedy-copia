@@ -16,6 +16,7 @@ import { ARTE, llave, contar, ponerTip } from './graficas_arte.js?v=3';
 import { crearFichas } from './fichas_obras.js?v=2';
 import { T, IND, INDK, MACROS, CLAVE, valor, clavePct, claveArea, acceso, ACCESO_SUP, ACCESO_R, hayEstaciones, SEM_REF } from './indicadores_macro.js?v=2';
 import { FUENTES_PARES } from './sim_fuentes.js';
+import { iniciarIndicadoresEscena } from './indicadores_escena.js?v=1';
 
 const PASO = 2; // series de 15 años muestreadas cada 2 semanas
 const ICO_FX = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M8.6 4.2c-1.4 0-2 .9-2.3 2.4L5 15.1c-.3 1.4-.9 2-2 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.2 8.4h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m11.4 9 5 6.4M16.4 9l-5 6.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
@@ -314,6 +315,7 @@ const tri = (s) => `<svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="t
 const sig = (x, d) => { const r = +Math.abs(x).toFixed(d); return (r === 0 ? '±' : x > 0 ? '+' : '−') + num(Math.abs(x), d); };
 
 export function iniciarPanelIndicadores({ R, getM, getFIN }) {
+  const lecturaMapa = iniciarIndicadoresEscena({ R, getM });
   const FI = crearFichas(); // fichas «qué hizo» de cada obra (data3d/fichas_obras.js)
   if (!document.getElementById('pi-css')) { const st = document.createElement('style'); st.id = 'pi-css'; st.textContent = CSS; document.head.appendChild(st); }
   ponerTip((html, x, y) => (html == null ? tip().ocultar() : tip().mostrar(html, x, y)));
@@ -393,7 +395,7 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
   function tarjeta(sec, k, viz) {
     const d = INDK[k], a = document.createElement('article'); a.className = 'pi-card'; a.id = 'pi-c-' + k; a.dataset.k = k;
     const qa = QA[k] || {};
-    a.innerHTML = `<header class="pi-ch"><h3>${k === 'inter' ? 'Interacciones bióticas' : esc(d.n)}</h3><button type="button" class="pi-fx" aria-expanded="false" aria-controls="pi-f-${k}" aria-label="Ver fórmula de ${esc(d.n)}" title="Ver fórmula">${ICO_FX}<span>Ver fórmula</span></button></header>`
+    a.innerHTML = `<header class="pi-ch"><h3>${k === 'inter' ? 'Interacciones bióticas' : esc(d.n)}</h3><button type="button" class="pi-mapa" data-mapa="${k}" aria-pressed="false" aria-label="Ver ${esc(d.n)} animado en el mapa">Ver en mapa</button><button type="button" class="pi-fx" aria-expanded="false" aria-controls="pi-f-${k}" aria-label="Ver fórmula de ${esc(d.n)}" title="Ver fórmula">${ICO_FX}<span>Ver fórmula</span></button></header>`
       + `<p class="pi-q">${esc(qa.q || '')}</p>`
       + `<div class="pi-kpi"><p class="pi-val"><b class="v">—</b><small>${esc(d.u)}</small></p><p class="pi-dir"></p></div><div class="pi-cs"></div><div class="pi-viz"></div><p class="pi-e" hidden>${esc(qa.e || '')}</p><div class="pi-form" id="pi-f-${k}" hidden></div>`;
     sec.appendChild(a);
@@ -401,6 +403,7 @@ export function iniciarPanelIndicadores({ R, getM, getFIN }) {
     const C = { k, el: a, vis: false, abierta: false, up: viz ? viz(a.querySelector('.pi-viz'), a) : null };
     const alternarFormula = () => { C.abierta = !C.abierta; a.querySelector('.pi-fx').setAttribute('aria-expanded', C.abierta); a.querySelector('.pi-form').hidden = !C.abierta; a.querySelector('.pi-e').hidden = !C.abierta; if (C.abierta && R.hist.length) { try { formula(C, ctxDe()); } catch (er) { console.warn('tablero:', er); } } };
     a.querySelector('.pi-fx').addEventListener('click', alternarFormula);
+    a.querySelector('.pi-mapa').addEventListener('click', () => lecturaMapa.elegir(k));
     for (const el of [a.querySelector('.pi-ch h3'), a.querySelector('.pi-val')]) {
       el.addEventListener('click', () => { if (R.def && R.def.par >= 2 && R.def.par <= 6) alternarFormula(); });
       el.addEventListener('keydown', (e) => { if (R.def && R.def.par >= 2 && R.def.par <= 6 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); alternarFormula(); } });
