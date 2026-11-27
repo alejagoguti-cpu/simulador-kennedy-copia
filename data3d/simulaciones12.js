@@ -74,6 +74,7 @@ import { crearRed, MOTIVOS } from './red_trofica.js?v=3';
 import { ZONAS, PARCHES, CIERRES, BODEGAS, MERCADOS, COSTO } from './sim_red_datos.js?v=2';
 import { EXPO } from './exposicion_trafico.js?v=1';
 import { PLAN_BAV } from './plan_bavaria_datos.js?v=2'; // la misma instancia que usa sim_vida.js
+import { ORG_KG_HAB_DIA } from './sim_fuentes.js';
 
 const NZ = ZONAS.length, NP = PARCHES.length;
 export const ZONAS_XZ = ZONAS.map(z => [z[0], z[1]]); // centro de cada zona de 500 m, marco MUNDO del simulador (x este, z sur)
@@ -82,21 +83,21 @@ export const SEMANAS = SEMANAS_FIN; // nombre anterior (compatibilidad)
 export const FASES = [{ n: 'Corto plazo', a0: 1, a1: 5 }, { n: 'Mediano plazo', a0: 6, a1: 10 }, { n: 'Largo plazo', a0: 11, a1: 20 }];
 
 /* ---------- TOMTOM: calibración de la congestión ----------
-   TomTom Traffic Index, Bogotá, año 2025 (publicado el 30-ene-2026): nivel de congestión 69,9 %, 31 min 45 s para recorrer 10 km, séptima ciudad
-   más congestionada del mundo, 153 horas perdidas en hora pico; +7,7 puntos frente a 2024 (≈ 62,2 %) y casi dos minutos más por 10 km
+   TomTom Traffic Index, Bogotá, año 2025: nivel de congestión 69,6 %, 31 min 45 s para recorrer 10 km, séptima ciudad
+   más congestionada del mundo, 153 horas perdidas en hora pico; +7,7 puntos frente a 2024 (≈ 61,9 %) y casi dos minutos más por 10 km
    (2024: 29 min 23 s según Portafolio; 2023: 25 min 30 s, puesto 19 de 387).
      https://www.tomtom.com/traffic-index/bogota-traffic/
      https://www.portafolio.co/economia/regiones/bogota-cada-ano-con-un-trafico-que-sigue-empeorando-nivel-de-congestion-en-la-ciudad-crecio-7-7-en-487350
      https://www.elcarrocolombiano.com/movilidad/bogotanos-pierden-cinco-dias-al-ano-en-el-trafico-segun-indice-tomtom-2023/
    No se usa la API de TomTom (no hay llave): solo las cifras publicadas.
-   · congestión de TomTom = tiempo de viaje / tiempo en flujo libre − 1  →  flujo libre = 31,75 / 1,699 = 18,7 min por 10 km.
+   · congestión de TomTom = tiempo de viaje / tiempo en flujo libre − 1  →  flujo libre = 31,75 / 1,696 = 18,7 min por 10 km.
    · curva BPR: tiempo / flujo libre = 1 + α·(v/c)^β, β = 4 (Bureau of Public Roads 1964, Traffic Assignment Manual). La congestión es entonces
-     proporcional a (v/c)^4 y, con la capacidad vial fija, a trafico^4: congestion = 69,9 %·trafico⁴. [SUP] la capacidad vial no cambia en 20 años
+     proporcional a (v/c)^4 y, con la capacidad vial fija, a trafico^4: congestion = 69,6 %·trafico⁴. [SUP] la capacidad vial no cambia en 20 años
      (ninguna vía nueva en el modelo salvo las internas del plan parcial) y el índice de tráfico del modelo representa la demanda vehicular de Bogotá.
    · tendencia: con el crecimiento del parque de sim_vida.js (+1,5 %/año los carros) el modelo da +3 puntos de congestión el primer año; TomTom midió
      +7,7 puntos en 2025 y +6 %/año en tiempo por 10 km entre 2023 y 2025, años con las obras del metro y de las troncales (Av. 68, Calle 13) que
      quitan capacidad. [SUP] el modelo no suma ese efecto de obra: es la proyección CONSERVADORA (sin obras); se reporta la diferencia. */
-export const TOMTOM = { anio: 2025, congestion: 69.9, min10km: 31.75, libre: 31.75 / 1.699, beta: 4, prevAnio: 2024, prevCongestion: 62.2,
+export const TOMTOM = { anio: 2025, congestion: 69.6, min10km: 31.75, libre: 31.75 / 1.696, beta: 4, prevAnio: 2024, prevCongestion: 61.9,
   fuentes: ['https://www.tomtom.com/traffic-index/bogota-traffic/',
     'https://www.portafolio.co/economia/regiones/bogota-cada-ano-con-un-trafico-que-sigue-empeorando-nivel-de-congestion-en-la-ciudad-crecio-7-7-en-487350'] };
 
@@ -166,7 +167,8 @@ const fZonaP = (d, r, D) => cl01((D - (d - r)) / (2 * r));
    · vivienda: KG_HAB = 0,72 kg/persona·día = 5.680 t/día del servicio ordinario de Bogotá (UAESP, abril 2026: https://bogota.gov.co/mi-ciudad/habitat/aumenta-la-produccion-de-residuos-solidos-en-bogota-segun-uaesp)
      / 7,9 millones de habitantes. Puntos = zonas de 500 m con centro a RADIO m o menos de Corabastos; total_t_dia suma toda Kennedy.
    · crecimiento: 2,7 %/año (UAESP: +5,5 % en el relleno Doña Juana entre 2024 y 2026). Deslizador basuraCrece.
-   SIN RECOGER: 1 − recolección; recolección por defecto 84 % = 5.680 / (5.680 + 1.089 t/día en puntos críticos y arrojo clandestino, UAESP 2026).
+   SIN RECOGER: 1 − recolección; 84 % es una hipótesis del modelo. Las 1.089 t/día en puntos críticos también fueron recogidas,
+   por lo que no permiten estimar la fracción no recolectada. No hay una medición local comparable para este parámetro.
      En B y C la fracción orgánica que separa la red (sep / gen de sim_vida.js × 55 % orgánico [SUP, caracterización típica de Bogotá]) ya no queda en la calle.
    ACUMULADA (t): cada punto acumula lo que no se recoge y la limpieza de puntos críticos retira LIMPIEZA = 1/8 por semana [SUP: un punto crítico dura
      unas 5–6 semanas]. Arranca en equilibrio con la generación de hoy (acumulada0).
@@ -178,7 +180,7 @@ const fZonaP = (d, r, D) => cl01((D - (d - r)) / (2 * r));
      [SUP HA_T = 3,3·10⁻⁵ ha por semana por t/día: con el estado actual el humedal La Vaca pierde ~1 ha en 20 años; no hay tasa medida]. El área perdida
      baja el hábitat de todas las especies del humedal como √(área / área inicial) (s.red.xH; la misma dependencia con √área de sim_vida.js).
      humedalHa suma el borde restaurado de La Vaca (desmonte de bodegas) cuando existe. */
-export const BASURA_SUP = { CORA_T: 100, FLORES_T: 5, KG_HAB: 0.72, CRECE: 0.027, RECOLECCION: 0.84, LIMPIEZA: 1 / 8, RADIO: 1500, ORGANICO: 0.55, AVE_RATA: 0.5, HA_T: 3.3e-5, D_EXP: 500,
+export const BASURA_SUP = { CORA_T: 100, FLORES_T: 5, KG_HAB: 0.72, CRECE: 0.027, RECOLECCION: 0.84, LIMPIEZA: 1 / 8, RADIO: 1500, ORGANICO: 0.5132, AVE_RATA: 0.5, HA_T: 3.3e-5, D_EXP: 500,
   ARROJO_EXTRA: 0.032, HUM_T: 7, K_CONT: 0.35, TALA_URB: 0.005 };
 /* ESTADO ACTUAL QUE SE DEGRADA (2026-11-23):
    · arrojo clandestino que crece más rápido que la basura: 968 t/día arrojadas a la calle (UAESP citada por El Tiempo,
@@ -190,7 +192,7 @@ export const BASURA_SUP = { CORA_T: 100, FLORES_T: 5, KG_HAB: 0.72, CRECE: 0.027
      La basura acumulada en el borde baja la calidad del humedal para toda su fauna como 1 / (1 + K_CONT·(acumulada / acumulada de hoy − 1))
      [SUP K_CONT = 0,35: no hay relación dosis-efecto publicada; con él el estado actual pierde ~30 % del área funcional hacia los años 12–14].
      Área funcional = Σ área × calidad / Σ área de hoy (+ el borde restaurado de La Vaca cuando existe): regla de game over «humedal».
-   · la red de la propuesta (B y C: mercados y Bavaria Común con compost) recoge la fracción orgánica (55 %) de lo que antes se arrojaba, en
+   · la red de la propuesta (B y C: mercados y Bavaria Común con compost) recoge la fracción orgánica (51,32 %, proxy distrital UAESP 2017) de lo que antes se arrojaba, en
      proporción a los nodos abiertos (calendario de mercados_red.js) [SUP]; los techos (sim. 12) compostan en casa solo los orgánicos de los hogares con huerta (≈ 0,3 % de Kennedy: casi no cambia el arrojo).
    · árboles: TALA_URB = 0,5 %/año menos árboles en los parques del estado actual [SUP: en 2024 se autorizaron 4.390 intervenciones de árboles por
      riesgo y se cayeron 609 (https://bogota.gov.co/mi-ciudad/ambiente/emergencias-por-arboles-atendidas-en-bogota-balance-durante-de-2024), ~0,2–0,3 % de
@@ -319,7 +321,7 @@ const sDur = { k: 'cierreDur', n: 'Duración del cierre', min: 1, max: 520, paso
 const sTraf = { k: 'trafCrece', n: 'Crecimiento anual del tráfico', min: 0, max: 3, paso: 0.1, val: 1.5, unidad: '%/año', ayuda: 'Carros nuevos cada año. 1,5 % = el parque automotor de Bogotá 2020–2024; la congestión parte de la medida de 2025 (69,9 %).' };
 const sPob = (val = 0) => ({ k: 'pobCrece', n: 'Crecimiento de la población', min: -1, max: 3, paso: 0.1, val, unidad: '%/año', ayuda: 'Expansión y densificación de Kennedy: más comida necesaria, más orgánicos y más carros.' });
 const sRuido = { k: 'mitiga', n: 'Calles pacificadas y con barreras verdes', min: 0, max: 100, paso: 5, val: 0, unidad: '%', ayuda: 'Calles a 30 km/h y con franjas verdes: unos 3 dB menos en ellas; menos ruido para las aves.' };
-const sRecol = { k: 'recoleccion', n: 'Recolección de la basura', min: 50, max: 100, paso: 1, val: 84, unidad: '%', ayuda: 'UAESP 2026: 5.680 t/día recogidas por el servicio y 1.089 t/día en puntos críticos y arrojo clandestino (16 % sin recoger).' };
+const sRecol = { k: 'recoleccion', n: 'Recolección de la basura', min: 50, max: 100, paso: 1, val: 84, unidad: '%', ayuda: '84 % es un supuesto de sensibilidad: no hay una tasa local de basura sin recoger. UAESP reporta también como RECOGIDOS los residuos de puntos críticos; no son el 16 % sin recoger.' };
 const sFrac = { k: 'P2.frac', n: 'Hogares que separan los orgánicos', min: 0, max: 1, paso: 0.05, val: 0.4, unidad: '0–1', ayuda: 'Fracción de los hogares cubiertos que separa sus orgánicos para las Estaciones Circulares (sim_modelos.js: 0,4).' };
 const PAR_SL = {
   /* par 01 (2026-11-25, docs/fuentes_abastecimiento.md): valores por defecto con fuente; rangos justificados en la ayuda de cada uno.
@@ -534,7 +536,11 @@ export function crear(id, semilla = 1, valores = {}) {
   const metro = { red: SUP_SIMS.METRO_RED, desde: SUP_SIMS.METRO_SEM, F: PRE.metroF(SUP_SIMS.METRO_RED) }; // metro Línea 1 en TODAS (proyecto real)
   if (P === 2) mod.cierre = { via: SUP_SIMS.CIERRE_VIA, t0: Math.round(val.cierreT0), dur: Math.round(val.cierreDur) };
   // La restauración depende de las intervenciones del modelo, sin multiplicador por escenario.
-  const s = V.crear(S.propuesta ? S.base : 'D', semilla, mod); // sin propuesta = escenario D de sim_vida.js (A + plan parcial)
+  const kgOrgInicial = V.SUP.KG_ORG;
+  if (P === 3) V.SUP.KG_ORG = ORG_KG_HAB_DIA;
+  let s;
+  try { s = V.crear(S.propuesta ? S.base : 'D', semilla, mod); }
+  finally { V.SUP.KG_ORG = kgOrgInicial; } // solo el par 03 usa el proxy orgánico calibrado
   const vivTot = PLAN_BAV.VIV_ETAPA.reduce((a, v) => a + v, 0);
   const plan = !S.propuesta ? { esc: (val.planViv != null ? val.planViv : vivTot) / vivTot, autos: val.planAutos != null ? val.planAutos : PLAN_BAV.AUTOS_HOG, accesos: Math.max(1, Math.round(val.planAccesos || 2)) } : null;
   if (plan) plan.viv = PLAN_BAV.VIV_ETAPA.map(v => v * plan.esc);  const E = { id, semilla, val, PAR, s, mod, metro, plan, o: null, racha: Object.fromEntries(REGLAS.map(R => [R.k, 0])), go: null, ev: [], ind: null,
@@ -1457,7 +1463,7 @@ export function paso(E) {
   if (E.obras) obrasAve(E, t);
   if (E.pred || E.cie || E.bas) { const X = E.xAve, PX = E.pred ? E.pred.xAve : null, OX = E.obras ? E.obras.xAve : null; for (let p = 0; p < NP; p++) X[p] = (PX ? PX[p] : 1) * E.xBas[p] * E.xDes[p] * (OX ? OX[p] : 1); }
   if (E.plan) { if (E.plan.esc !== 1 || E.plan.autos !== PLAN_BAV.AUTOS_HOG) { sv = [PLAN_BAV.VIV_ETAPA, PLAN_BAV.AUTOS_HOG]; PLAN_BAV.VIV_ETAPA = E.plan.viv; PLAN_BAV.AUTOS_HOG = E.plan.autos; } }
-  const kgOrg = V.SUP.KG_ORG; if (E.fOrg !== 1) V.SUP.KG_ORG = kgOrg * E.fOrg; // par 03: más orgánicos por persona, solo en esta simulación
+  const kgOrg = V.SUP.KG_ORG; if (E.par === 3) V.SUP.KG_ORG = ORG_KG_HAB_DIA * E.fOrg;
   try { E.o = V.paso(s, E.PAR); } finally { V.SUP.KG_ORG = kgOrg; if (sv) { PLAN_BAV.VIV_ETAPA = sv[0]; PLAN_BAV.AUTOS_HOG = sv[1]; } } // las viviendas y autos del deslizador solo para esta simulación
   E.ind = null;
   if (E.ab01) ab01Paso(E); // par 01: abastecimiento con datos (reemplaza la cobertura de sim_vida.js)
@@ -1875,3 +1881,4 @@ function avisos(E, x) {
   return out;
 }
 export { MOTIVOS, KEN_XZ };
+

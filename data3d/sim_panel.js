@@ -1,3 +1,4 @@
+import { FUENTES_PARES, ORG_KG_HAB_DIA } from './sim_fuentes.js';
 /* ============ PANEL DE LAS SIMULACIONES 02–06 (mismo formato que la 01 de data3d/ab01_panel.js) ============
    docs/todas_las_simulaciones.md, «Implementación» (2026-11-26). Va en #su-der (acordeón de limpio.js), debajo de los deslizadores de sim_ui.js:
    · ALERTA arriba del todo (degradé URBIA), con el estrés de la simulación; no tapa la franja de eventos (#su-feed baja).
@@ -57,10 +58,10 @@ export const PAR_CFG = {
       { t: '¿Aguantan los humedales?', s: [{ f: (I) => I.humedalFuncional, n: 'funcionan' }], lim: 70, limTxt: 'game over < 70 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Área sin rellenar × calidad frente a la basura de sus bordes: ${nf(I.humedalFuncional)} % de hoy.` },
       { t: '¿Cuánta basura queda en la calle?', s: [{ f: (I) => I.basura ? I.basura.fraccionSinRecoger * 100 : null, n: 'sin recoger' }], fmt: (v) => nf(v, 1) + ' %', sub: (I) => `Parte de la basura que nadie recoge y termina en calles y bordes de humedales.` }],
     fx: [['Orgánicos por persona', (I) => '×' + nf(I.fOrg || 1, 2), (I, v) => `1 + aumento ${nf(v.orgAumento)} % × mín(1, (semana − ${nf(v.orgT0)}) ÷ 52)`],
-      ['Orgánicos generados', (I) => nf(I.evaluacion && I.evaluacion.territorio.organicos) + ' t/día', () => 'población × kg orgánicos por persona (sim_vida.js) × orgánicos por persona'],
+      ['Orgánicos generados', (I) => nf(I.evaluacion && I.evaluacion.territorio.organicos) + ' t/día', () => `población × ${nf(ORG_KG_HAB_DIA, 3)} kg/persona/día × factor de la prueba. Proxy: residuos domiciliarios y grandes generadores recogidos en Kennedy (UAESP, junio 2025) × 51,32 % orgánico de Bogotá (caracterización 2017) ÷ población del modelo.`],
       ['Orgánicos en las Estaciones', (I) => nf(I.residuos * 100) + ' %', (I, v) => `pendientes ÷ almacenamiento (3 días de contenedores + 2 semanas de planta) · capacidad ${nf(v['P2.cap'])} kg/semana por Estación · hogares que separan ${nf(v['P2.frac'] * 100)} % · game over > 100 % 4 semanas`],
       ['Humedales que funcionan', (I) => nf(I.humedalFuncional) + ' %', () => 'Σ área sin rellenar × calidad ÷ área de hoy · calidad = 1 ÷ (1 + k × basura acumulada en el borde) · game over < 70 % 4 semanas (Ramsar, Decreto 624 de 2007; 30 % supuesto)'],
-      ['Basura sin recoger', (I) => nf(I.basura && I.basura.fraccionSinRecoger * 100, 1) + ' %', (I, v) => `1 − recolección ${nf(v.recoleccion)} % (UAESP 2026), crece con el arrojo clandestino`]] },
+      ['Basura sin recoger', (I) => nf(I.basura && I.basura.fraccionSinRecoger * 100, 1) + ' %', (I, v) => `1 − recolección ${nf(v.recoleccion)} % [SUP, no medida en Kennedy]; crece con el arrojo clandestino`]] },
   4: { titulo: 'Pérdida de un corredor verde',
     alerta(I, val) { const s = I ? I.sem : 0, F = I && I.fragmento, n = ['El Burro', 'Techo', 'La Vaca', 'Bosque de Bavaria'][Math.max(1, Math.min(4, Math.round(val.parche))) - 1];
       if (s < val.parcheT0) return ['Se perderá parte de ' + n, 'en ' + nf(val.parcheT0 - s) + ' sem']; return ['Se perdió parte de ' + n, '−' + nf(val.parchePerdida) + ' %' + (F ? ' · ' + nf(F.haPerdidas, 1) + ' ha' : '')]; },
@@ -82,7 +83,7 @@ export const PAR_CFG = {
       { t: '¿Cuánto tráfico hay?', s: [{ f: (I) => I.trafico * 100, n: 'tráfico' }], lim: 130, limTxt: 'game over > 130 %', fmt: (v) => nf(v) + ' %', sub: (I) => `Más gente, más carros: ${nf(I.trafico * 100)} % del tráfico de hoy.` },
       { t: '¿Aguantan los humedales?', s: [{ f: (I) => I.humedalFuncional, n: 'funcionan' }], lim: 70, limTxt: 'game over < 70 %', fmt: (v) => nf(v) + ' %', sub: (I) => `La población que crece deja más basura en sus bordes: ${nf(I.humedalFuncional)} % de hoy.` }],
     fx: [['Precio del suelo', (I) => '×' + nf(I.especulacion.indice, 3), (I, v) => `1 + (13 % × metro + 25 % × plan parcial + ${nf(v.presionSuelo, 1)} %/año × años) × (1 − 0,5 × protección ${nf(I.especulacion.proteccion * 100)} %)`],
-      ['Hogares en riesgo', (I) => nf(I.especulacion.hogaresRiesgo), () => 'Σ hogares × 55,1 % en arriendo (Encuesta Multipropósito 2025) × mín(1, alza) × (1 − protección)'],
+      ['Hogares en riesgo', (I) => nf(I.especulacion.hogaresRiesgo), () => 'Σ hogares × 55,1 % en arriendo (Encuesta Multipropósito 2025, Bogotá urbana: proxy para Kennedy) × mín(1, alza) × (1 − protección). La relación entre alza y riesgo es supuesta.'],
       ['Tráfico', (I) => nf(I.trafico * 100) + ' %', (I, v) => `carros ${nf(v.trafCrece, 1)} %/año × población (${nf(v.pobCrece, 1)} %/año) · metro −10 % junto al corredor · game over ≥ 130 % 4 semanas (meta del Plan de Movilidad 2023: 1 ÷ 0,77)`],
       ['Humedales que funcionan', (I) => nf(I.humedalFuncional) + ' %', () => 'área sin rellenar × calidad frente a la basura del borde · game over < 70 % 4 semanas']] },
   6: { titulo: 'Recursos insuficientes',
@@ -100,6 +101,9 @@ export const PAR_CFG = {
 
 /* ---------- estilos (mismo vidrio y paleta que la 01) ---------- */
 const CSS = `
+#sp-fuentes{margin:10px 0;padding:9px 11px;border:1px solid rgba(79,209,197,.3);border-radius:10px;font:12px/1.45 var(--ui-sans,Inter,system-ui,sans-serif)}
+#sp-fuentes summary{cursor:pointer;font-weight:700;color:#4fd1c5}
+#sp-fuentes ul{margin:9px 0;padding-left:18px}#sp-fuentes li{margin:5px 0}#sp-fuentes a{color:inherit;text-decoration:underline}#sp-fuentes small{display:block;opacity:.72}#sp-fuentes p{margin:8px 0 0;opacity:.8}
 #sp-alerta{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:46;display:flex;gap:9px;align-items:center;max-width:calc(100vw - 32px);white-space:nowrap;padding:6px 6px 6px 12px;border-radius:12px;
   background:linear-gradient(100deg,#304ffe 0%,#3d8fe6 55%,#4fd1c5 100%);border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 22px rgba(20,40,110,.35);text-shadow:0 1px 2px rgba(10,20,60,.45);color:#fff;overflow:hidden;font:400 11.5px/1.35 var(--ui-sans,Inter,system-ui,sans-serif)}
 #sp-alerta[hidden]{display:none}#sp-alerta>svg{width:16px;height:16px;flex:none;animation:spIco 1.1s ease-in-out infinite}
@@ -167,6 +171,7 @@ function marcarGo(der) { der.querySelectorAll('#sp-go .r').forEach(e => e.classL
 const filaLim = (k) => { const L = LIM[k]; return `<div class="r" data-go="${k}" title="Game over si ${L.txt} 4 semanas seguidas"><span>${L.n}</span><b>—</b><i><u></u><s style="left:${(L.lim / L.S * 100).toFixed(1)}%"></s></i></div>`; };
 export function htmlAbajo(def) { const C = PAR_CFG[def && def.par]; if (!C) return '';
   return `<div id="sp-vivo"><h6>En vivo · se mueve solo</h6>${C.vivo.map(([n], i) => `<div class="r" data-vi="${i}"><span>${n}</span><b>—</b><i><u></u></i></div>`).join('')}</div>
+    <details id="sp-fuentes"><summary>Datos de partida · fuentes</summary><ul>${(FUENTES_PARES[def.par] || []).map(F => `<li><a href="${F.url}" target="_blank" rel="noopener noreferrer">${F.n}: ${F.v}</a><small>${F.alcance}</small></li>`).join('')}</ul><p>Los cambios de la prueba, las tasas sin medición y los límites de game over son supuestos del modelo.</p></details>
     <button type="button" id="sp-fx" aria-haspopup="dialog" title="Cómo se calcula cada variable y cada gráfica">${ICO_FX}<span>Fórmulas</span></button>
     <div id="sp-go" aria-live="polite"><h6 title="4 semanas seguidas pasando un límite = game over. Mismos límites con y sin propuesta.">Game over · límites</h6>${PAR_LIM[def.par].map(filaLim).join('')}</div>
     <div id="sp-graf"><h6>Gráficas</h6><div class="tabs" role="tablist">${[...C.graf, { t: '¿Qué cambia con la propuesta?' }].map((g, i) => `<button type="button" role="tab" data-g="${i}" aria-selected="${i === VISTA}" title="${g.t}">${i + 1}</button>`).join('')}</div>
@@ -251,3 +256,4 @@ function cmp(H, B, I, par) { const sem = I.sem, Bh = B && B.length ? B[Math.min(
     [[vs, COL.cor, 'sin'], [vc, COL.vio, 'con']].forEach(([v, c, n], j) => { const yy = y0 + 10 + j * (bh + 2); if (v == null) { svg += `<text x="${x0}" y="${(yy + bh - 1).toFixed(1)}" style="opacity:.5">${n}: calculando…</text>`; return; }
       svg += `<rect x="${x0}" y="${yy.toFixed(1)}" width="${Math.max(1, xs(k, v) - x0).toFixed(1)}" height="${bh.toFixed(1)}" rx="2.5" fill="${c}"/><text class="v" x="${(Math.min(xs(k, v), x1) + 4).toFixed(1)}" y="${(yy + bh - 0.5).toFixed(1)}" style="font-size:9.5px;fill:${c}">${L.f(v)} · ${n}</text>`; }); });
   return { svg, sub: `Semana ${nf(sem)} de las dos corridas, mismos valores. Raya dorada = límite.`, ley: [[COL.cor, 'Sin propuesta', 'b'], [COL.vio, 'Con propuesta', 'b']] }; }
+

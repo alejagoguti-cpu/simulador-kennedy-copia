@@ -60,9 +60,9 @@ VIAS.forEach(([id, n], k) => { if (!marca[k].length) { console.log('sin tramos e
   for (let e = 0; e < R.M; e++) R.eC[e] = eC0[e]; CIERRES.push({ id, n, tramos: marca[k].length, f: F }); });
 // parches
 const P = [];
-P.push({ id: 'burro', n: 'Humedal El Burro', t: 'humedal', x: 2095.7, z: -109.1, ha: 18.8, k: 1 });
-P.push({ id: 'vaca', n: 'Humedal La Vaca', t: 'humedal', x: 760, z: 1160, ha: 7.9, k: 0.8 });
-{ const t = geo(4.645179, -74.141652); P.push({ id: 'techo', n: 'Humedal de Techo', t: 'humedal', x: r1(t[0]), z: r1(t[1]), ha: 11.7, k: 0.9 }); }
+P.push({ id: 'burro', n: 'Humedal El Burro', t: 'humedal', x: 2095.7, z: -109.1, ha: 18.84, k: 1 });
+P.push({ id: 'vaca', n: 'Humedal La Vaca', t: 'humedal', x: 760, z: 1160, ha: 9.94, k: 0.8 });
+{ const t = geo(4.645179, -74.141652); P.push({ id: 'techo', n: 'Humedal de Techo', t: 'humedal', x: r1(t[0]), z: r1(t[1]), ha: 11.67, k: 0.9 }); }
 P.push({ id: 'bosqueBav', n: 'Bosque de Bavaria', t: 'bosque', x: 4100, z: 60, ha: 5 });
 const near = (x, z) => ZONAS.some(q => Math.hypot(q[0] - x, q[1] - z) < 700);
 const parq = D('parques.json').map(p => { let A = 0, cx = 0, cy = 0; const s = p.pts; for (let i = 0; i < s.length; i++) { const a = s[i], b = s[(i + 1) % s.length], c = a[0] * b[1] - b[0] * a[1]; A += c; cx += (a[0] + b[0]) * c; cy += (a[1] + b[1]) * c; }
@@ -105,3 +105,4 @@ console.log('zonas', ZONAS.length, 'pob', ZONAS.reduce((s, q) => s + q[2], 0), '
 CIERRES.forEach(c => { const z = new Set(c.f.map(q => q[0])); const peor = c.f.reduce((m, q) => Math.min(m, q[2]), 1);
   const porF = (j) => { const v = c.f.filter(q => q[1] === j).map(q => q[2]); return v.length ? `${v.length} zonas, min ${Math.min(...v).toFixed(2)}` : '-'; };
   console.log(c.id, 'tramos', c.tramos, 'pares afectados', c.f.length, 'zonas', z.size, 'peor f', peor.toFixed(3), '| cora', porF(0), '| bav', porF(1), '| dj', porF(2)); });
+
