@@ -11,7 +11,7 @@
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
 import { iniciarSimUI } from './sim_ui.js?v=145';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=8';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=9';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -268,10 +268,8 @@ export function iniciarLimpio({ T3 }) {
     /* par 01 con propuesta: recorrido de las cubiertas de 15 pisos (data3d/cubiertas_foco.js, vía data3d/estrategias.js) */
     { const E = T3.EST; if (E && E.focoCubiertas) { if (par === 1 && con) setTimeout(() => { if (ESC.activo === id) E.focoCubiertas(true); }, 150); else E.focoCubiertas(false); } }
     /* 2026-11-26 (pedido de la autora): se quitó el recorrido de la 02 con el «paro» (data3d/recorrido_movilidad.js ya no se carga; el archivo queda) */
-    import('./recorrido_residuos.js?v=6').then(m => {
-      if (par !== 3) return m.cerrarRecorridoResiduos();
-      setTimeout(() => { if (ESC.activo === id) m.abrirRecorridoResiduos({ con }).catch(e => console.warn('recorrido residuos:', e)); }, 150);
-    }).catch(e => console.warn('recorrido residuos:', e));
+    /* El recorrido unificado ya cubre 02–06. Cerrar una visita antigua que pudiera seguir abierta. */
+    import('./recorrido_residuos.js?v=6').then(m => m.cerrarRecorridoResiduos()).catch(e => console.warn('cerrar recorrido residuos:', e));
   }
   function refrescarSeis() { const base = escE === 'con' ? 14 : 13; seis.classList.toggle('con', escE === 'con');
     const h = seis.querySelector('.lp-sec'); if (h) h.title = ESC.activo === base ? `Corre Kennedy ${escE === 'con' ? 'con' : 'sin'} propuesta, sin prueba de estrés. Toca una simulación para aplicarla desde ahora y ver sus diapositivas.` : 'Toca otra vez la simulación activa para quitarla.';
