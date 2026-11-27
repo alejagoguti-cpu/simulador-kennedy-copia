@@ -48,9 +48,12 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
   const circ = (x, y, r, fill, stroke, w = 1.5) => { g.beginPath(); g.arc(x, y, r, 0, 6.2832); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = w; g.stroke(); } };
   const texto = (s, x, y, col = '#ecf2e9') => { g.font = '600 11px ui-monospace,monospace'; g.lineWidth = 3; g.strokeStyle = '#0a1514'; g.strokeText(s, x, y); g.fillStyle = col; g.fillText(s, x, y); };
   function flujo(a, b, n, t, col, r = 2.4) { // partículas que recorren a->b; n ∝ magnitud del modelo
-    if (!a.v && !b.v) return; g.strokeStyle = col + '66'; g.lineWidth = 1.2; g.setLineDash([4, 6]); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); g.setLineDash([]);
-    for (let i = 0; i < n; i++) { const u = (t + i / n) % 1; circ(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, r, col); }
+    if (!a.v && !b.v) return; g.strokeStyle = col + '66'; g.lineWidth = 3.5; g.setLineDash([9, 7]); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); g.setLineDash([]);
+    for (let i = 0; i < n; i++) { const u = (t + i / n) % 1; const x=a.x+(b.x-a.x)*u,y=a.y+(b.y-a.y)*u; flecha(x,y,Math.atan2(b.y-a.y,b.x-a.x),col,Math.max(9,r*3)); }
   }
+  function flecha(x,y,a,col,size=11){g.save();g.translate(x,y);g.rotate(a);g.fillStyle='#0a1514';g.beginPath();g.moveTo(size+3,0);g.lineTo(-size*.65,-size*.68-3);g.lineTo(-size*.65,size*.68+3);g.closePath();g.fill();g.fillStyle=col;g.beginPath();g.moveTo(size,0);g.lineTo(-size*.65,-size*.68);g.lineTo(-size*.65,size*.68);g.closePath();g.fill();g.restore();}
+  function alerta(x,y,label,col='#d99370'){g.save();g.translate(x,y);g.fillStyle='#0a1514e8';g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(0,-17);g.lineTo(16,13);g.lineTo(-16,13);g.closePath();g.fill();g.stroke();g.fillStyle=col;g.font='bold 17px ui-monospace,monospace';g.textAlign='center';g.fillText('!',0,8);g.textAlign='left';g.restore();if(label)texto(label,x+20,y+4,col);}
+  function rutaVial(L,col,w,t,rotulo){let marcada=false;for(const pts of L){const q=pts.map(([x,z])=>P(x,z,3));if(q.length<2||!q.some(p=>p.v))continue;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#09110e';g.lineWidth=w+6;g.beginPath();q.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.stroke();g.strokeStyle=col;g.lineWidth=w;g.setLineDash([18,10]);g.lineDashOffset=reducido?0:-t*40;g.stroke();g.setLineDash([]);for(let i=1;i<q.length;i++){const a=q[i-1],b=q[i],d=Math.hypot(b.x-a.x,b.y-a.y);if(d<36)continue;for(let m=35+(reducido?0:t*22%45);m<d;m+=70)flecha(a.x+(b.x-a.x)*m/d,a.y+(b.y-a.y)*m/d,Math.atan2(b.y-a.y,b.x-a.x),col,11);if(!marcada&&d>70){texto(rotulo,(a.x+b.x)/2,(a.y+b.y)/2-18,col);marcada=true;}}}g.lineCap='butt';}
   function vias() { // polilíneas en el mundo de la vía cerrada y el desvío (aristas reales de la red, cierre_gradual.js)
     if (viasCache || !T3.net?.edges || !T3.lw) return viasCache;
     const lin = (k) => (VIAS[k]?.e || []).map((e) => T3.net.edges[e]?.[1]).filter(Boolean).map((pts) => pts.map(([x, y]) => T3.lw(x, y)));
@@ -61,27 +64,25 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
   /* ---------- lectura propia de cada escenario ---------- */
   const ESC = {
     2(t) { const v = vias(), C = I.cierre, f = lerp('cf', C?.fase || 0), tr = lerp('tr', C?.traficoDesvio || 1);
-      if (v) { if (f > 0.01) { polilinea(v.americas, `rgba(217,147,112,${0.35 + 0.6 * f})`, 4, [10, 6]); }
-        else polilinea(v.americas, 'rgba(232,196,106,.45)', 2, [3, 7]);
-        if (f > 0.01) polilinea(v.mayo, `rgba(232,196,106,${0.4 + 0.5 * Math.min(1, tr - 1)})`, 2 + 4 * Math.min(1, (tr - 1) * 2), [6, 10], reducido ? 0 : -t * 60 * tr); }
-      for (const a of (I.atropellos?.lista || []).filter((a) => ok(a) && a.sem > I.sem - 12).slice(-30)) { const q = P(a.x, a.z); if (q.v) circ(q.x, q.y, 3, '#c9f27a', '#0a1514', 1); }
+      if(v){if(f>0.01){rutaVial(v.americas,'#d99370',Math.max(8,13*f),t,'VÍA CERRADA');rutaVial(v.mayo,'#e8c46a',Math.max(6,8*tr),t*tr,'DESVÍO');const tramo=v.americas.find(pts=>pts.length>1&&pts.some(([x,z])=>P(x,z,3).v));if(tramo){const q=P(tramo[Math.floor(tramo.length/2)][0],tramo[Math.floor(tramo.length/2)][1],3);if(q.v)alerta(q.x,q.y-25,'CIERRE ACTIVO');}}else rutaVial(v.americas,'#e8c46a',5,t,'CIERRE PROGRAMADO');}
+      for (const a of (I.atropellos?.lista || []).filter((a) => ok(a) && a.sem > I.sem - 12).slice(-30)) { const q = P(a.x, a.z); if (q.v) alerta(q.x,q.y,'CONFLICTO','#c9f27a'); }
       return C?.fase ? `${C.via} cerrada · desvío ×${(C.traficoDesvio || 1).toFixed(2)} por ${C.vias_desvio?.map((d) => d.n).join(', ') || '—'} · 10 km: ${Math.round(I.tiempoDesvio10km || I.tiempo10km || 0)} min`
         : `Av. de las Américas abierta · tráfico ×${(I.trafico || 1).toFixed(2)} · 10 km: ${Math.round(I.tiempo10km || 0)} min`; },
     3(t) { const pts = (I.basura?.puntos || []).filter(ok), mx = Math.max(1, ...pts.map((p) => p.acumulada || 0));
-      for (const [i, p] of pts.entries()) { const q = P(p.x, p.z); if (!q.v) continue; const a = lerp('b' + i, p.acumulada || 0), r = 3 + 16 * Math.sqrt(a / mx);
+      for (const [i, p] of pts.entries()) { const q = P(p.x, p.z); if (!q.v) continue; const a = lerp('b' + i, p.acumulada || 0), r = 9 + 27 * Math.sqrt(a / mx);
         circ(q.x, q.y, r, `rgba(217,147,112,${0.18 + 0.5 * Math.min(1, (p.sinRecoger_t_dia || 0) / Math.max(1, p.t_dia || 1) * 4)})`, '#d99370', 1);
-        if (!reducido) circ(q.x, q.y - r - 3 - ((t * 20 + i * 7) % 12), 1.6, '#e8c46a'); }
+        if ((p.sinRecoger_t_dia||0)>0) alerta(q.x,q.y-r-22,'RESIDUOS'); }
       const rec = (I.recorridos || []).filter((r) => ok(r.de) && ok(r.a)), mt = Math.max(0.01, ...rec.map((r) => r.t_dia));
       for (const r of rec) flujo(P(r.de.x, r.de.z), P(r.a.x, r.a.z), Math.max(1, Math.round(6 * r.t_dia / mt)), reducido ? 0.5 : t * 0.25, '#e8c46a');
       for (const e of (I.estaciones || []).filter(ok)) { const q = P(e.x, e.z); if (!q.v) continue; const u = e.cap_t_dia ? Math.min(1.2, e.tratado_t_dia / e.cap_t_dia) : 0;
-        g.fillStyle = '#0a1514cc'; g.fillRect(q.x - 7, q.y - 16, 14, 16); g.fillStyle = u > 1 ? '#d99370' : '#c9f27a'; g.fillRect(q.x - 6, q.y - 1 - 14 * Math.min(1, u), 12, 14 * Math.min(1, u)); }
+        g.fillStyle = '#0a1514cc'; g.fillRect(q.x - 11, q.y - 24, 22, 24); g.fillStyle = u > 1 ? '#d99370' : '#c9f27a'; g.fillRect(q.x - 10, q.y - 2 - 20 * Math.min(1, u), 20, 20 * Math.min(1, u));texto('TRATAMIENTO',q.x+15,q.y-12,'#c9f27a'); }
       const gen = I.residuosK?.gen, sr = pts.reduce((s, p) => s + (p.sinRecoger_t_dia || 0), 0);
       return `Generación ${gen != null ? Math.round(gen).toLocaleString('es-CO') + ' t/día' : 'sin dato'} · sin recoger ${Math.round(sr)} t/día · ${(I.estaciones || []).filter((e) => e.tipo === 'estacion').length} estaciones`; },
     4(t) { const par = (I.verde?.parches || []).filter(ok);
-      for (const p of par) { const q = P(p.x, p.z); if (!q.v) continue; const r = escala(p.x, p.z, lerp('r' + p.id, p.r || 0)); circ(q.x, q.y, r, `rgba(155,187,130,${0.08 + 0.25 * (p.calidad || 0)})`, p.r < p.r0 ? '#d99370' : '#9bbb82', p.r < p.r0 ? 2 : 1); }
+      for (const p of par) { const q = P(p.x, p.z); if (!q.v) continue; const r = escala(p.x, p.z, lerp('r' + p.id, p.r || 0)); circ(q.x, q.y, r, `rgba(155,187,130,${0.08 + 0.25 * (p.calidad || 0)})`, p.r < p.r0 ? '#d99370' : '#9bbb82', p.r < p.r0 ? 5 : 3);if(p.r<p.r0)alerta(q.x,q.y-r-22,'HÁBITAT'); }
       for (const d of (I.evaluacion?.diversidad?.porParche || []).filter(ok)) { const q = P(d.x, d.z); if (!q.v) continue; const n = Math.min(12, Math.round((d.riqueza || 0) / 2));
         for (let k = 0; k < n; k++) { const a = k / n * 6.2832 + (reducido ? 0 : t * 0.6); circ(q.x + Math.cos(a) * 9, q.y + Math.sin(a) * 5, 1.6, '#c9f27a'); } }
-      for (const c of I.corredores || []) { const [a, b] = c.puntos.map(([x, z]) => P(x, z)); const u = c.fase || 0; g.strokeStyle = '#8dbcb7'; g.lineWidth = 3; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u); g.stroke(); }
+      for (const c of I.corredores || []) { const [a, b] = c.puntos.map(([x, z]) => P(x, z)); const u = c.fase || 0; g.strokeStyle = '#8dbcb7'; g.lineWidth = 8; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u); g.stroke();if(u>0.05)flecha(a.x+(b.x-a.x)*u,a.y+(b.y-a.y)*u,Math.atan2(b.y-a.y,b.x-a.x),'#8dbcb7',14); }
       for (const [i, d] of (I.desplazamientos || []).entries()) if (ok(d.de) && ok(d.a)) flujo(P(d.de.x, d.de.z), P(d.a.x, d.a.z), 1, reducido ? 0.5 : (t * 0.2 + i * 0.13), '#d99370', 3);
       for (const a of (I.atropellos?.lista || []).filter((a) => ok(a) && a.sem > I.sem - 8).slice(-40)) { const q = P(a.x, a.z); if (!q.v) continue; g.strokeStyle = '#d99370'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(q.x - 3, q.y - 3); g.lineTo(q.x + 3, q.y + 3); g.moveTo(q.x + 3, q.y - 3); g.lineTo(q.x - 3, q.y + 3); g.stroke(); }
       for (const r of (I.refugios || []).filter(ok)) { const q = P(r.x, r.z); if (q.v) circ(q.x, q.y, 5, null, '#8dbcb7', 2); }
@@ -89,15 +90,15 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
     5(t) { const Z = (I.suelo?.zonas || []).filter(ok), mx = Math.max(1e-4, ...Z.map((z) => z.presion || 0));
       for (const [i, z] of Z.entries()) { const q = P(z.x, z.z); if (!q.v) continue; const u = lerp('p' + i, (z.presion || 0) / mx), s = escala(z.x, z.z, 120);
         g.fillStyle = `rgba(217,147,112,${0.08 + 0.55 * u})`; g.fillRect(q.x - s, q.y - s * 0.6, 2 * s, 1.2 * s);
-        if (z.estado && z.estado !== 'permanece') { g.strokeStyle = '#e8c46a'; g.lineWidth = 2; g.setLineDash([3, 3]); g.lineDashOffset = reducido ? 0 : -t * 20; g.strokeRect(q.x - s, q.y - s * 0.6, 2 * s, 1.2 * s); g.setLineDash([]); } }
-      for (const p of (I.suelo?.protegidos || []).filter(ok)) { const q = P(p.x, p.z); if (q.v) { circ(q.x, q.y, 9, 'rgba(155,187,130,.35)', '#9bbb82', 2); } }
+        if (z.estado && z.estado !== 'permanece') { g.strokeStyle = '#e8c46a'; g.lineWidth = 4; g.setLineDash([8, 5]); g.lineDashOffset = reducido ? 0 : -t * 20; g.strokeRect(q.x - s, q.y - s * 0.6, 2 * s, 1.2 * s); g.setLineDash([]);alerta(q.x,q.y-s*.6-22,'CAMBIO DE USO'); } }
+      for (const p of (I.suelo?.protegidos || []).filter(ok)) { const q = P(p.x, p.z); if (q.v) { circ(q.x, q.y, 16, 'rgba(155,187,130,.35)', '#9bbb82', 4);texto('PROTEGIDO',q.x+20,q.y,'#9bbb82'); } }
       return `${Z.length} zonas · cambian de uso ${I.suelo?.cambian ?? 0} · desplazadas ${I.suelo?.desplazadas ?? 0} · ${(I.suelo?.protegidos || []).length} suelos protegidos`; },
     6(t) { const G = I.gobernanza; if (!G) return 'Sin datos de gobernanza en esta corrida';
       for (const b of (G.barrios || []).filter(ok)) { const q = P(b.x, b.z); if (!q.v) continue; const r = 10 + Math.sqrt(b.necesidad || 0) * 1.6, c = lerp('c' + b.n, Math.min(1, b.cobertura || 0));
-        circ(q.x, q.y, r, 'rgba(217,147,112,.22)', '#d99370', 1); g.strokeStyle = '#c9f27a'; g.lineWidth = 4; g.beginPath(); g.arc(q.x, q.y, r, -1.5708, -1.5708 + 6.2832 * c); g.stroke();
+        circ(q.x, q.y, r, 'rgba(217,147,112,.22)', '#d99370', 3);if(b.cobertura<.5)alerta(q.x,q.y-r-23,'SIN COBERTURA'); g.strokeStyle = '#c9f27a'; g.lineWidth = 4; g.beginPath(); g.arc(q.x, q.y, r, -1.5708, -1.5708 + 6.2832 * c); g.stroke();
         texto(`${Math.round(c * 100)}%`, q.x + r + 3, q.y + 4); }
-      for (const [i, a] of (G.asambleas || []).filter(ok).entries()) { const q = P(a.x, a.z); if (!q.v || !a.activa) continue; const u = reducido ? 0.5 : (t * 0.5 + i * 0.2) % 1; circ(q.x, q.y, 4 + 14 * u, null, `rgba(141,188,183,${1 - u})`, 1.5); circ(q.x, q.y, 3, '#8dbcb7'); }
-      for (const e of (G.equipamientos || []).filter((e) => ok(e) && (e.sem == null || e.sem <= I.sem))) { const q = P(e.x, e.z); if (q.v) { g.fillStyle = '#8dbcb7'; g.fillRect(q.x - 3, q.y - 3, 6, 6); } }
+      for (const [i, a] of (G.asambleas || []).filter(ok).entries()) { const q = P(a.x, a.z); if (!q.v || !a.activa) continue; const u = reducido ? 0.5 : (t * 0.5 + i * 0.2) % 1; circ(q.x, q.y, 4 + 14 * u, null, `rgba(141,188,183,${1 - u})`, 1.5); circ(q.x, q.y, 7, '#8dbcb7','#0a1514',2); }
+      for (const e of (G.equipamientos || []).filter((e) => ok(e) && (e.sem == null || e.sem <= I.sem))) { const q = P(e.x, e.z); if (q.v) { g.fillStyle = '#8dbcb7'; g.fillRect(q.x - 6, q.y - 6, 12, 12); } }
       return `Cobertura media ${Math.round(((G.barrios || []).reduce((s, b) => s + Math.min(1, b.cobertura || 0), 0) / Math.max(1, (G.barrios || []).length)) * 100)} % · ${G.decisiones ?? 0} decisiones · ${(G.equipamientos || []).filter((e) => e.sem == null || e.sem <= I.sem).length} equipamientos`; }
   };
   /* ---------- indicador elegido (encima de la lectura del escenario) ---------- */
@@ -114,7 +115,7 @@ export function iniciarIndicadoresEscena({ R, getM, T3 }) {
     if (!clave || !INDK[clave]) return;
     for (const [i, p] of puntosIndicador(clave).entries()) { const q = P(p.x, p.z, 6); if (!q.v) continue; const col = p.mal ? '#d99370' : '#c9f27a';
       g.strokeStyle = col; g.lineWidth = 1; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x, q.y - 22); g.stroke(); g.setLineDash([]);
-      circ(q.x, q.y, 3.5, col, '#0a1514', 1.5); if (!reducido) { const u = (t * 0.4 + i * 0.11) % 1; circ(q.x, q.y, 4 + 10 * u, null, col + Math.round((1 - u) * 200).toString(16).padStart(2, '0'), 1); }
+      circ(q.x, q.y, 8, col, '#0a1514', 2.5); if (!reducido) { const u = (t * 0.4 + i * 0.11) % 1; circ(q.x, q.y, 4 + 10 * u, null, col + Math.round((1 - u) * 200).toString(16).padStart(2, '0'), 1); }
       if (p.v != null && Number.isFinite(p.v)) texto(String(p.v), q.x + 5, q.y - 24, col); }
   }
   function marcarBotones() { document.querySelectorAll('.pi-mapa').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mapa === clave))); }
