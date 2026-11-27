@@ -449,8 +449,8 @@ export function iniciarLimpio({ T3 }) {
     valoresPar.set(def.par, { ...(valoresPar.get(def.par) || {}), ...valores });
     UI.aplicarVariables(valores); preparado = true; $b('.play').disabled = false; alternar();
   } });
-  function abrirRecorrido(id) { if (!UI || ESC.activo !== id) return; const d = UI.R.def; if (d && d.par >= 2 && d.par <= 6) recorrido.abrir(d, valoresPar.get(d.par)); }
-  iniciarSimUI({ T3, SIMS_UI: SIMS }).then(u => { UI = window.KEN_SIMUI = u; if (ESC.activo) { u.preparar(ESC.activo); if (!preparado) setTimeout(() => abrirRecorrido(ESC.activo), 100); } }).catch(e => console.warn('interfaz de simulaciones:', e));
+  function abrirRecorrido(id) { if (!UI || ESC.activo !== id) return; const d = UI.R.def; if (d && d.propuesta && d.par >= 2 && d.par <= 6) recorrido.abrir(d, valoresPar.get(d.par)); }
+  iniciarSimUI({ T3, SIMS_UI: SIMS }).then(u => { UI = window.KEN_SIMUI = u; if (ESC.activo) { u.preparar(ESC.activo); if (!preparado && u.R.def?.propuesta) setTimeout(() => abrirRecorrido(ESC.activo), 100); } }).catch(e => console.warn('interfaz de simulaciones:', e));
   function factorCarros() { // multiplica la demanda de tráfico que se dibuja (index.html, updateTraffic)
     if (window.KEN_TRAF_F) return window.KEN_TRAF_F; // más carros (los mismos de la simulación SUMO) cuando el modelo dice que hay más tráfico
     return 1; // el metro está en todas las simulaciones: su efecto lo lleva el modelo semanal
@@ -461,7 +461,7 @@ export function iniciarLimpio({ T3 }) {
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
-    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); const mostrarRecorrido = S.par >= 2 && S.par <= 6; preparado = true; $b('.play').disabled = false; if (mostrarRecorrido) RELOJ.pausarAños(true);
+    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); const mostrarRecorrido = S.base === 'C' && S.par >= 2 && S.par <= 6; preparado = true; $b('.play').disabled = false; if (mostrarRecorrido) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
