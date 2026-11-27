@@ -113,7 +113,7 @@ const CSS = `
 #sp-fuentes ul{margin:9px 0;padding-left:18px}#sp-fuentes li{margin:5px 0}#sp-fuentes a{color:inherit;text-decoration:underline}#sp-fuentes small{display:block;opacity:.72}#sp-fuentes p{margin:8px 0 0;opacity:.8}
 #sp-vivo [data-vi],#sp-go [data-go]{cursor:pointer}#sp-vivo [data-vi]:focus-visible,#sp-go [data-go]:focus-visible{outline:2px solid #4fd1c5;outline-offset:2px}
 #sp-alerta{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:46;display:flex;gap:9px;align-items:center;max-width:calc(100vw - 32px);white-space:nowrap;padding:6px 6px 6px 12px;border-radius:12px;
-  background:linear-gradient(100deg,#304ffe 0%,#3d8fe6 55%,#4fd1c5 100%);border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 22px rgba(20,40,110,.35);text-shadow:0 1px 2px rgba(10,20,60,.45);color:#fff;overflow:hidden;font:400 11.5px/1.35 var(--ui-sans,Inter,system-ui,sans-serif)}
+  background:var(--ui-glass,rgba(16,24,26,.62));-webkit-backdrop-filter:var(--ui-glass-fx,blur(14px));backdrop-filter:var(--ui-glass-fx,blur(14px));border:1px solid var(--ui-glass-bd,rgba(255,255,255,.18));border-left:3px solid #d99370;box-shadow:var(--ui-glass-sh,0 6px 22px rgba(0,0,0,.3));text-shadow:0 1px 2px rgba(0,0,0,.4);color:#f1ece6;overflow:hidden;font:400 11.5px/1.35 var(--ui-sans,Inter,system-ui,sans-serif)}
 #sp-alerta[hidden]{display:none}#sp-alerta>svg{width:16px;height:16px;flex:none;animation:spIco 1.1s ease-in-out infinite}
 #sp-alerta span{font:500 12px var(--ui-sans,Inter,sans-serif);overflow:hidden;text-overflow:ellipsis}
 #sp-alerta b{font:600 10px/1 var(--ui-mono,'JetBrains Mono',monospace);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85)}

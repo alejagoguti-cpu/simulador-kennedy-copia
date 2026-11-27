@@ -10,8 +10,8 @@
    [SUP] METRO_MENOS_CARROS = 0,10: no hay cifra oficial de cuánto tráfico quita la Línea 1. */
 import { RELOJ } from './reloj.js?v=5';
 import { crearSlides } from './slides_sim.js?v=9';
-import { iniciarSimUI } from './sim_ui.js?v=146';
-import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=10';
+import { iniciarSimUI } from './sim_ui.js?v=147';
+import { crearRecorridoArquitectura } from './recorrido_arquitectura.js?v=11';
 
 export const METRO_SEM_OP = 114;
 export const SEMANAS_FIN = 780; /* 15 años */
@@ -395,6 +395,7 @@ export function iniciarLimpio({ T3 }) {
     { const md = RELOJ.minutoDia, hh = String(Math.floor(md / 60) % 24).padStart(2, '0') + ':' + String(Math.floor(md % 60)).padStart(2, '0'); const hb = $b('.hora b'); if (hb.textContent !== hh) hb.textContent = hh; }
     /* simulador: el tablero y las simulaciones quedan visibles mientras corre (sin desvanecer paneles) */ T3.horaLuz = 10.5; /* siempre luz de media mañana (el reloj y los carros siguen su hora) */ { const hg = T3.scene.getObjectByName('hechos'); if (hg) for (const o of hg.children) if (o.isPoints) o.visible = !corre; } /* corriendo: sin las cruces de atropellos */ /* con una simulación: luz de media mañana, cielo despejado y poca neblina (como la referencia) */ if (window.KEN_FOCO && ESC.activo && corre && window.KEN_FOCO.activo) window.KEN_FOCO.off({ dur: 1.5 }); /* corriendo: la ciudad con su luz real, sin oscurecer */
     const p = $b('.play'); if (p.dataset.corre !== String(corre)) { p.dataset.corre = corre; p.innerHTML = corre ? ICO_PAUSA : ICO_PLAY; p.setAttribute('aria-label', corre ? 'Pausar' : 'Correr'); }
+    if (typeof syncIniciar === 'function') syncIniciar();
   });
 
   /* ---------- escoger simulación: prepara el territorio y espera PLAY ---------- */
@@ -410,6 +411,17 @@ export function iniciarLimpio({ T3 }) {
     if (!aviso) { aviso = document.createElement('p'); aviso.id = 'lp-pendientes'; aviso.setAttribute('aria-live', 'polite'); aviso.style.cssText = 'padding:9px 11px;border:1px solid var(--ui-bd2);border-radius:9px;background:var(--ui-acc-bg);color:var(--ui-acc-tx);font:500 11px/1.4 var(--ui-mono)'; caja.appendChild(aviso); }
     const faltan = pendientesVariables.claves.size - pendientesVariables.tocadas.size;
     aviso.textContent = faltan ? `Configura ${faltan} variable${faltan === 1 ? '' : 's'} para habilitar Play.` : 'Variables completas · Play habilitado.';
+    /* botón junto a las variables: el mismo play de la barra (alternar), habilitado solo con todas las variables definidas */
+    let bp = caja.querySelector('#lp-iniciar');
+    if (!bp) { bp = document.createElement('button'); bp.type = 'button'; bp.id = 'lp-iniciar'; bp.style.cssText = 'display:block;width:100%;margin:8px 0 4px;padding:11px 12px;border-radius:10px;border:1px solid var(--ui-acc);background:var(--ui-acc);color:#14200c;font:700 13px var(--ui-sans);letter-spacing:.02em;cursor:pointer'; bp.onclick = () => { if (preparado) alternar(); }; }
+    if (bp.previousElementSibling !== aviso) aviso.after(bp);
+    syncIniciar();
+  }
+  function syncIniciar() {
+    const bp = document.getElementById('lp-iniciar'); if (!bp) return;
+    const corre = !RELOJ.pausaSem, txt = !preparado ? 'Iniciar simulación · Play' : corre ? 'Pausar simulación' : (RELOJ.sem > 1 ? 'Reanudar simulación · Play' : 'Iniciar simulación · Play');
+    if (bp.textContent !== txt) bp.textContent = txt;
+    if (bp.disabled !== !preparado) { bp.disabled = !preparado; bp.style.opacity = preparado ? '1' : '.42'; bp.style.cursor = preparado ? 'pointer' : 'not-allowed'; }
   }
   document.addEventListener('change', e => {
     const k = e.target?.dataset?.k, p = pendientesVariables;
@@ -448,7 +460,7 @@ export function iniciarLimpio({ T3 }) {
   function escoger(id, continuar) {
     const S = SIMS.find(s => s.id === id); if (!S) return; const seguir = continuar && RELOJ.sem > 1 && ESC.activo && !(S.par >= 2 && S.par <= 6);
     document.body.classList.toggle('ra-par-escenario', S.par >= 2 && S.par <= 6);
-    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
+    recorrido.cerrar(); pendientesVariables = null; document.querySelector('#lp-pendientes')?.remove(); document.querySelector('#lp-iniciar')?.remove(); preparado = !(S.par >= 2 && S.par <= 6); $b('.play').disabled = !preparado; if (!preparado) RELOJ.pausarAños(true);
     ESC.activo = id; ESC.sim = S; bar.classList.remove('vacia'); yaOblicua = false;
     document.querySelectorAll('#lp-sims button, #lp-seis button').forEach(b => b.classList.toggle('on', +b.dataset.s === id));
     const nm = document.getElementById('lp-simn'); if (nm) nm.textContent = S.n;
@@ -469,6 +481,16 @@ export function iniciarLimpio({ T3 }) {
   const VISTA = { c: [2350, 0, 380], d: [300, 1450, 1650] }; /* desde más arriba (no tan bajo), con algo de horizonte */ /* vista oblicua fija desde el inicio (la misma del modo presentación), sin vuelos */
   function ponerVista() { if (!T3.camera || !T3.orbit) return; T3.anim = null; T3.llegada = null; T3.orbit.target.set(VISTA.c[0], VISTA.c[1], VISTA.c[2]); T3.camera.position.set(VISTA.c[0] + VISTA.d[0], VISTA.d[1], VISTA.c[2] + VISTA.d[2]); T3.orbit.update(); }
   ponerVista();
+  /* si la GPU se queda sin memoria el navegador apaga WebGL y la ciudad queda en blanco: se avisa y se ofrece recargar más liviano */
+  T3.renderer?.domElement?.addEventListener('webglcontextlost', e => {
+    e.preventDefault(); if (document.getElementById('lp-gpu')) return;
+    const q = new URLSearchParams(location.search), liv = q.get('calidad') === 'liviana'; q.set('calidad', 'liviana');
+    const d = document.createElement('div'); d.id = 'lp-gpu'; d.setAttribute('role', 'alert');
+    d.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10060;max-width:min(420px,calc(100vw - 32px));padding:18px 20px;border-radius:14px;background:var(--ui-glass);border:1px solid var(--ui-glass-bd);box-shadow:var(--ui-glass-sh);backdrop-filter:var(--ui-glass-fx);-webkit-backdrop-filter:var(--ui-glass-fx);color:#eef2ec;font:400 13px/1.5 var(--ui-sans);text-align:center';
+    d.innerHTML = `<b style="display:block;font:600 15px var(--ui-sans);margin-bottom:6px">La tarjeta gráfica se quedó sin memoria</b>El navegador apagó la vista 3D. ${liv ? 'Cierra otras pestañas o programas pesados y recarga.' : 'Recarga en calidad liviana para seguir.'}<br><button type="button" style="margin-top:12px;padding:9px 16px;border-radius:10px;border:1px solid var(--ui-acc);background:var(--ui-acc);color:#14200c;font:700 13px var(--ui-sans);cursor:pointer">Recargar${liv ? '' : ' en calidad liviana'}</button>`;
+    d.querySelector('button').onclick = () => { location.search = q.toString(); };
+    document.body.appendChild(d);
+  });
   { let k = 0; const fija = setInterval(() => { const L = document.getElementById('loader'); if (L && !L.classList.contains('hidden')) { ponerVista(); return; } if (++k < 12) { if (!document.body.classList.contains('ra-recorrido')) ponerVista(); } else clearInterval(fija); }, 250); } // mientras carga y el primer segundo y medio después de abrir
   /* PRECOMPILAR lo que aparece más tarde (estaciones, catenaria y letreros del metro, que se prenden al abrir en la semana 114): si se
      compilan sus sombreadores en ese momento la imagen se congela ~0,5 s; se hace una vez al cargar, con esos grupos visibles un instante */

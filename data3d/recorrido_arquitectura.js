@@ -11,9 +11,14 @@ const FICHAS = {
 export function crearRecorridoArquitectura({ T3, alComenzar, alMostrarVariables }) {
   const THREE = T3.THREE;
   const estilo = document.createElement('style'); estilo.textContent = `
-    #ra-fondo{position:fixed;inset:0;z-index:1001;color:#e8ede9;font-family:system-ui,sans-serif;display:none}
-    #ra-fondo.on{display:grid;grid-template-columns:minmax(360px,32%) 1fr}
-    #ra-panel{padding:clamp(20px,2.4vw,38px);overflow:auto;max-height:100vh;background:var(--ui-glass);border-right:1px solid var(--ui-glass-bd);box-shadow:var(--ui-glass-sh);-webkit-backdrop-filter:var(--ui-glass-fx);backdrop-filter:var(--ui-glass-fx)}
+    #ra-fondo{position:fixed;inset:0;z-index:1001;color:#e8ede9;font-family:system-ui,sans-serif;display:none;pointer-events:none}
+    #ra-fondo.on{display:block}
+    #ra-fondo #ra-panel,#ra-fondo #ra-cerrar{pointer-events:auto}
+    #ra-panel{position:absolute;left:16px;top:16px;width:min(380px,34vw);max-height:calc(100vh - 32px);box-sizing:border-box;padding:clamp(16px,1.8vw,26px);overflow:auto;border-radius:14px;background:var(--ui-glass);border:1px solid var(--ui-glass-bd);box-shadow:var(--ui-glass-sh);-webkit-backdrop-filter:var(--ui-glass-fx);backdrop-filter:var(--ui-glass-fx)}
+    #ra-fondo:not(.ubicacion) #ra-panel{width:min(540px,42vw)}
+    #ra-escena{position:absolute;inset:0}
+    #ra-escena .ra-guia{display:none}
+    body.ra-recorrido #lp-esc,body.ra-recorrido #gs-izq,body.ra-recorrido #pi-abrir{visibility:hidden!important}
     #ra-panel .ra-k{font:600 11px/1.4 var(--ui-mono);letter-spacing:.14em;color:var(--ui-acc-tx);text-transform:uppercase}
     #ra-panel h2{font:400 clamp(27px,2.6vw,45px)/1.06 var(--ui-tit);text-transform:uppercase;margin:20px 0}
     #ra-panel p{font:400 14px/1.55 system-ui,sans-serif;color:#b5c1c3;max-width:58ch}
@@ -26,7 +31,7 @@ export function crearRecorridoArquitectura({ T3, alComenzar, alMostrarVariables 
     #ra-corte{position:relative;width:100%;aspect-ratio:1200/530;background:#0b1216;border:1px solid #36434b;margin:18px 0 4px;overflow:hidden}
     #ra-corte canvas,#ra-corte svg{position:absolute;inset:0;width:100%;height:100%}
     #ra-especies{display:grid;gap:6px;margin:15px 0}.ra-especie{font:12px ui-monospace,monospace;color:#acd4a8;padding:7px 9px;border-left:2px solid #8fb26b;background:#18231a}
-    #ra-escena{position:relative;min-width:0;background:transparent;pointer-events:none}
+    #ra-escena{min-width:0;background:transparent;pointer-events:none}
     #ra-marco{position:absolute;inset:10% 7%;border:1px solid var(--ui-acc);box-shadow:inset 0 0 0 1px #0b121688,0 0 0 9999px #0a10151a;display:none}
     #ra-fondo.ubicacion #ra-marco{display:none}#ra-marco::before,#ra-marco::after{content:'';position:absolute;width:28px;height:28px;border-color:var(--ui-acc)}
     #ra-marco::before{top:-2px;left:-2px;border-top:3px solid;border-left:3px solid}#ra-marco::after{right:-2px;bottom:-2px;border-right:3px solid;border-bottom:3px solid}
@@ -37,7 +42,7 @@ export function crearRecorridoArquitectura({ T3, alComenzar, alMostrarVariables 
     @keyframes ra-luz{50%{fill:#c9f27ac2;filter:drop-shadow(0 0 20px #c9f27a)}}
     @keyframes ra-trazo{to{stroke-dashoffset:-26}}@keyframes ra-pulso{0%{opacity:1;scale:.6}70%{opacity:.15;scale:1.35}100%{opacity:0;scale:1.5}}
     #ra-escena .ra-guia{position:absolute;top:20px;left:20px;background:#101a1fbd;padding:7px 10px;font:11px ui-monospace,monospace;color:#fff}
-    #ra-escena .ra-ley{position:absolute;bottom:20px;left:20px;max-width:350px;background:#101a1fcb;padding:12px 14px;font:13px/1.45 system-ui}
+    #ra-escena .ra-ley{position:absolute;bottom:20px;right:20px;max-width:350px;background:var(--ui-glass);border:1px solid var(--ui-glass-bd);border-radius:10px;backdrop-filter:var(--ui-glass-fx);-webkit-backdrop-filter:var(--ui-glass-fx);padding:12px 14px;font:13px/1.45 system-ui}
     #ra-escena .ra-ley b{display:block;color:#e7f2e0}
     #ra-vars{display:grid;gap:14px;margin:20px 0}.ra-var{display:grid;gap:5px;padding:10px;border:1px solid #344148;background:#111a1e}.ra-var label{display:flex;justify-content:space-between;gap:12px;font-size:12px}.ra-var output{color:#f1c2a1}.ra-var input{width:100%;accent-color:#d99370}.ra-var select{width:100%;background:#1a2429;border:1px solid #66767a;color:#fff;padding:8px}.ra-var.hecha{border-color:#71966b}
     #ra-cerrar{position:absolute;right:18px;top:16px;z-index:2}
@@ -47,7 +52,7 @@ export function crearRecorridoArquitectura({ T3, alComenzar, alMostrarVariables 
     body.ra-par-escenario #su-feed .fe-h.mal,body.ra-par-escenario #su-feed li.fe.mal{--fe-c:#d99370}
     body.ra-par-escenario #su-feed .fe-h.bien,body.ra-par-escenario #su-feed li.fe.bien{--fe-c:#9bbb82}
     body.ra-par-escenario #su-feed .fe-v.on,body.ra-par-escenario .su-av button.ver{background:#d99370!important;color:#101518!important}
-    @media(max-width:760px){#ra-fondo.on{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 33vh}#ra-panel{padding:18px}#ra-panel h2{margin:8px 0}#ra-escena .ra-ley{display:none}}
+    @media(max-width:760px){#ra-panel,#ra-fondo:not(.ubicacion) #ra-panel{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:52vh;padding:14px}#ra-panel h2{margin:8px 0}#ra-escena .ra-ley{display:none}}
   `; document.head.appendChild(estilo);
   const fondo = document.createElement('div'); fondo.id = 'ra-fondo'; fondo.setAttribute('role','dialog'); fondo.setAttribute('aria-modal','true'); fondo.setAttribute('aria-label','Recorrido previo a la simulación');
   fondo.innerHTML = '<div id="ra-panel"></div><div id="ra-escena"><div id="ra-marco"><span>KENNEDY · ÁREA DE LA PRUEBA</span></div><div class="ra-guia">KENNEDY · ÁREA DE INTERVENCIÓN ILUMINADA</div><div class="ra-ley"></div></div><svg id="ra-objetivo" aria-hidden="true"><polygon id="ra-poligono"/><text id="ra-rotulo"></text></svg><button id="ra-cerrar" type="button" aria-label="Cerrar recorrido">Cerrar ×</button>';
